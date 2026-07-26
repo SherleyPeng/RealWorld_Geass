@@ -1,0 +1,11 @@
+{
+  "info": "加载 MVU (MagVarUpdate) 框架。必须先启用。国内 CDN。若加载失败可换国外 CDN 版。",
+  "id": "realworld-mvu-loader-v1",
+  "name": "MVU框架加载器",
+  "type": "script",
+  "data": {},
+  "content": {
+    "value": "import 'https://testingcf.jsdelivr.net/gh/MagicalAstrogy/MagVarUpdate/artifact/bundle.js';\nsetTimeout(function() {\n  if (typeof Mvu === 'undefined' || !Mvu.getMvuData) {\n    console.error('[MVU-Loader] MVU框架未就绪，请检查网络或切换CDN');\n    if (typeof toastr !== 'undefined') toastr.warning('MVU加载失败，请检查网络');\n  }\n}, 5000);\n"
+  },
+  "enabled": true
+}

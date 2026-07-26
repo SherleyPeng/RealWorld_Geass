@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:rgba(18,22,28,0.92);
+  --card:rgba(30,38,48,0.85);
+  --border:rgba(200,170,110,0.25);
+  --accent:#c8ad6a;
+  --accent2:#e8d5a3;
+  --text:#e0ddd5;
+  --text2:#9a958c;
+  --text3:#6b665e;
+  --good:#6aad6a;
+  --bad:#ad6a6a;
+  --pink:#d4a0b8;
+  --radius:10px;
+  --shadow:0 2px 12px rgba(0,0,0,0.4);
+  font:14px/1.5 'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+}
+body{background:var(--bg);color:var(--text);padding:8px;min-width:220px}
+.sb{display:flex;flex-direction:column;gap:6px}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);padding-bottom:4px;overflow-x:auto}
+.tab{padding:4px 10px;cursor:pointer;border-radius:6px 6px 0 0;font-size:12px;color:var(--text2);transition:.2s;user-select:none;white-space:nowrap}
+.tab:hover{color:var(--accent2);background:rgba(200,170,110,0.08)}
+.tab.active{color:var(--accent);background:rgba(200,170,110,0.12);border-bottom:2px solid var(--accent)}
+
+.panel{display:none}
+.panel.active{display:flex;flex-direction:column;gap:4px}
+
+.row{display:flex;justify-content:space-between;align-items:center;padding:3px 6px;background:var(--card);border-radius:6px;font-size:13px}
+.row .l{color:var(--text2);flex-shrink:0;margin-right:8px}
+.row .r{color:var(--text);text-align:right;word-break:break-all}
+
+.placeholder{text-align:center;padding:16px;color:var(--text3);font-size:13px}
+.error{color:var(--bad);text-align:center;padding:8px;font-size:12px}
+
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;background:rgba(200,170,110,0.15);color:var(--accent)}
+.badge.done{background:rgba(106,173,106,0.15);color:var(--good)}
+.badge.fail{background:rgba(173,106,106,0.15);color:var(--bad)}
+
+.sec-title{font-size:11px;color:var(--text3);padding:2px 6px;margin-top:2px}
+
+.lover-fold{margin-bottom:2px}
+.lover-fold summary{padding:4px 6px;background:var(--card);border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none}
+.lover-fold summary .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lover-fold summary .s{color:var(--pink);font-size:11px;flex-shrink:0}
+.lover-fold summary .i{font-size:11px;flex-shrink:0;min-width:20px;text-align:right}
+.lover-fold[open] summary{border-radius:6px 6px 0 0;border-bottom:1px solid var(--border)}
+.lover-detail{padding:4px 8px;background:rgba(30,38,48,0.5);border-radius:0 0 6px 6px;font-size:11px;line-height:1.6}
+.lover-detail .kv{display:flex;justify-content:space-between;padding:1px 0}
+.lover-detail .kv .k{color:var(--text3);flex-shrink:0;margin-right:8px}
+.lover-detail .kv .v{color:var(--text);text-align:right}
+
+.wx-msg{padding:4px 6px;background:var(--card);border-radius:6px;font-size:12px;display:flex;gap:6px;align-items:flex-start}
+.wx-msg .av{width:28px;height:28px;border-radius:4px;background:rgba(200,170,110,0.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.wx-msg .body{flex:1;min-width:0}
+.wx-msg .body .nn{font-size:11px;color:var(--text2)}
+.wx-msg .body .tt{color:var(--text);margin-top:2px;font-size:12px;line-height:1.4}
+.wx-msg .body .tm{font-size:10px;color:var(--text3);text-align:right}
+
+.rep-inline{display:flex;gap:4px;flex-wrap:wrap;padding:2px 6px}
+.rep-chip{padding:1px 8px;border-radius:10px;font-size:11px;background:rgba(200,170,110,0.12);color:var(--accent);white-space:nowrap}
+
+.asset-row{display:flex;justify-content:space-between;padding:3px 6px;background:var(--card);border-radius:6px;font-size:13px}
+.asset-row .l{color:var(--accent)}
+.asset-row .r{color:var(--text)}
+.asset-sub{padding:2px 6px 2px 16px;font-size:12px;display:flex;justify-content:space-between;color:var(--text2)}
+</style>
+</head>
+<body>
+<div class="sb" id="app">
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="state">状态</div>
+    <div class="tab" data-tab="map">地图</div>
+    <div class="tab" data-tab="lover">恋人</div>
+    <div class="tab" data-tab="assets">资产</div>
+    <div class="tab" data-tab="wx">微信</div>
+    <div class="tab" data-tab="geass">言灵</div>
+  </div>
+  <div class="panel active" id="panel-state"></div>
+  <div class="panel" id="panel-map"></div>
+  <div class="panel" id="panel-lover"></div>
+  <div class="panel" id="panel-assets"></div>
+  <div class="panel" id="panel-wx"></div>
+  <div class="panel" id="panel-geass"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+function g(obj, path, def) {
+  if (obj == null) return def;
+  var parts = path.split('.');
+  var cur = obj;
+  for (var i = 0; i < parts.length; i++) {
+    if (cur == null || typeof cur !== 'object') return def;
+    cur = cur[parts[i]];
+  }
+  return (cur === '' || cur == null) ? def : cur;
+}
+
+function safeDisplay(val, maxDepth) {
+  if (maxDepth === undefined) maxDepth = 3;
+  if (val === null || val === undefined) return '-';
+  if (typeof val === 'string') return val || '-';
+  if (typeof val === 'number') return val;
+  if (typeof val === 'boolean') return val ? '是' : '否';
+  if (Array.isArray(val)) {
+    if (val.length === 0) return '-';
+    if (maxDepth <= 0) return '…';
+    return val.map(function(v){return safeDisplay(v, maxDepth-1)}).join(', ');
+  }
+  if (typeof val === 'object') {
+    if (maxDepth <= 0) return '…';
+    try { var s = JSON.stringify(val); return s.length > 60 ? s.slice(0,60)+'…' : s; } catch(e){ return '…'; }
+  }
+  return String(val);
+}
+
+function impColor(val) {
+  if (val >= 51) return '#6aad6a';
+  if (val >= 21) return '#8ab86a';
+  if (val >= -20) return '#c8ad6a';
+  if (val >= -50) return '#ad8a6a';
+  return '#ad6a6a';
+}
+
+function calcAge(birth, current) {
+  if (!birth || !current) return null;
+  var b = birth.split('-').map(Number);
+  var c = current.split('-').map(Number);
+  if (b.length !== 3 || c.length !== 3) return null;
+  var age = c[0] - b[0];
+  if (c[1] < b[1] || (c[1] === b[1] && c[2] < b[2])) age--;
+  return age;
+}
+
+function render(data) {
+  if (!data) {
+    document.querySelectorAll('.panel').forEach(function(p){ p.innerHTML = '<div class="placeholder">等待数据…</div>'; });
+    return;
+  }
+  renderState(data);
+  renderMap(data);
+  renderLover(data);
+  renderAssets(data);
+  renderWx(data);
+  renderGeass(data);
+}
+
+// ===== 状态 =====
+function renderState(d) {
+  var html = '';
+  var user = g(d, 'user', {});
+  var time = g(d, 'time', {});
+  var sit = g(d, 'situation', {});
+  var tasks = g(d, 'tasks', {});
+  var items = g(d, 'items', {});
+
+  var name = g(user, 'name', '未设置');
+  var birth = g(user, 'birth_date', '');
+  var curDate = g(time, 'current_date', '');
+  var age = calcAge(birth, curDate);
+  var gender = g(user, 'gender', '');
+  var height = g(user, 'height', '');
+  var appearance = g(user, 'appearance', '');
+  var clothing = g(user, 'clothing_style', '');
+  var devices = g(user, 'devices', {});
+  var bg = g(user, 'background', {});
+
+  html += '<div class="row"><span class="l">姓名</span><span class="r">'+safeDisplay(name)+'</span></div>';
+  if (gender) html += '<div class="row"><span class="l">性别</span><span class="r">'+gender+'</span></div>';
+  var ageStr = age !== null ? age + ' 岁' : safeDisplay(birth);
+  html += '<div class="row"><span class="l">年龄</span><span class="r">'+ageStr+'</span></div>';
+  if (height) html += '<div class="row"><span class="l">身高</span><span class="r">'+height+' cm</span></div>';
+  if (appearance) html += '<div class="row"><span class="l">外貌</span><span class="r" style="font-size:12px;max-width:180px">'+safeDisplay(appearance)+'</span></div>';
+  if (clothing) html += '<div class="row"><span class="l">穿衣风格</span><span class="r" style="font-size:12px;max-width:180px">'+safeDisplay(clothing)+'</span></div>';
+  if (g(devices,'phone') || g(devices,'laptop')) {
+    var phoneDev = g(devices,'phone') ? g(devices,'phone') : '';
+    var laptopDev = g(devices,'laptop') ? g(devices,'laptop') : '';
+    html += '<div class="row"><span class="l">设备</span><span class="r" style="font-size:11px;text-align:right">'+phoneDev+(phoneDev&&laptopDev?'<br>':'')+laptopDev+'</span></div>';
+  }
+  if (g(bg,'birthplace')) html += '<div class="row"><span class="l">出生地</span><span class="r" style="font-size:12px">'+safeDisplay(g(bg,'birthplace'))+'</span></div>';
+
+  var cur = g(sit, 'current');
+  if (cur) {
+    html += '<div class="row"><span class="l">当前状态</span><span class="r" style="font-size:12px;max-width:180px">'+safeDisplay(cur)+'</span></div>';
+  }
+
+  var itemKeys = typeof items === 'object' ? Object.keys(items) : [];
+  if (itemKeys.length > 0) {
+    html += '<div class="sec-title">物品</div>';
+    itemKeys.forEach(function(k){
+      var v = items[k];
+      var qty = g(v, 'quantity', 1);
+      html += '<div class="row"><span class="l">'+safeDisplay(g(v,'name',k))+'</span><span class="r">x'+qty+'</span></div>';
+    });
+  }
+
+  var taskArr = typeof tasks === 'object' ? Object.keys(tasks).map(function(k){return tasks[k]}) : [];
+  var active = taskArr.filter(function(t){return g(t,'status')==='进行中'});
+  var done = taskArr.filter(function(t){return g(t,'status')==='已完成'});
+  var fail = taskArr.filter(function(t){return g(t,'status')==='已失败'});
+  if (taskArr.length > 0) {
+    html += '<div class="sec-title">任务</div>';
+    html += '<div class="row"><span class="l">总数</span><span class="r">'+taskArr.length+'</span></div>';
+    html += '<div class="row"><span class="l">进行中</span><span class="r"><span class="badge">'+active.length+'</span></span></div>';
+    if (done.length) html += '<div class="row"><span class="l">已完成</span><span class="r"><span class="badge done">'+done.length+'</span></span></div>';
+    if (fail.length) html += '<div class="row"><span class="l">已失败</span><span class="r"><span class="badge fail">'+fail.length+'</span></span></div>';
+  }
+
+  document.getElementById('panel-state').innerHTML = html || '<div class="placeholder">暂无状态数据</div>';
+}
+
+// ===== 地图 =====
+function renderMap(d) {
+  var html = '';
+  var time = g(d, 'time', {});
+  var dateStr = safeDisplay(g(time,'current_date'));
+  var dayCount = safeDisplay(g(time,'day_count'));
+
+  html += '<div class="sec-title">时间</div>';
+  html += '<div class="row"><span class="l">日期</span><span class="r">'+dateStr+'</span></div>';
+  html += '<div class="row"><span class="l">穿越第</span><span class="r">'+dayCount+' 天</span></div>';
+
+  var sit = g(d, 'situation', {});
+  var curLoc = g(sit, 'current');
+  var knownRegions = g(d, 'world.known_regions', {});
+  var locLib = g(d, 'world.location_library', {});
+
+  html += '<div class="sec-title">位置</div>';
+  if (curLoc) {
+    html += '<div class="row"><span class="l">当前</span><span class="r" style="font-size:12px;max-width:200px">'+safeDisplay(curLoc)+'</span></div>';
+  }
+
+  var locKeys = Object.keys(locLib);
+  if (locKeys.length > 0) {
+    locKeys.slice(0, 3).forEach(function(k){
+      var v = locLib[k];
+      html += '<div class="row" style="flex-wrap:wrap"><span class="l">'+safeDisplay(g(v,'name',k))+'</span><span class="r" style="font-size:11px;max-width:150px">'+safeDisplay(g(v,'description')).slice(0,40)+'</span></div>';
+    });
+  }
+
+  var regKeys = Object.keys(knownRegions);
+  if (regKeys.length > 0) {
+    html += '<div class="sec-title">已探索区域</div>';
+    regKeys.slice(0, 4).forEach(function(k){
+      var v = knownRegions[k];
+      html += '<div class="row"><span class="l">'+safeDisplay(g(v,'name')||k)+'</span><span class="r" style="font-size:11px">'+safeDisplay(g(v,'description')).slice(0,25)+'</span></div>';
+    });
+    if (regKeys.length > 4) html += '<div class="placeholder" style="padding:2px">还有 '+(regKeys.length-4)+' 个区域</div>';
+  }
+
+  var rep = g(d, 'reputation', {});
+  var repKeys = Object.keys(rep);
+  if (repKeys.length > 0) {
+    html += '<div class="sec-title">声望</div>';
+    html += '<div class="rep-inline">';
+    repKeys.forEach(function(k){
+      var v = rep[k];
+      var val = g(v, 'value', 0);
+      var label = g(v, 'label', k);
+      var color = val >= 0 ? 'var(--good)' : 'var(--bad)';
+      html += '<span class="rep-chip" style="color:'+color+'">'+safeDisplay(label)+' ('+val+')</span>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('panel-map').innerHTML = html || '<div class="placeholder">暂无数据</div>';
+}
+
+// ===== 恋人 =====
+function renderLover(d) {
+  var rels = g(d, 'npc_relations', {});
+  var sexual = g(d, 'sexual', {});
+  var keys = Object.keys(rels);
+  var html = '';
+
+  var candidates = keys.filter(function(k){
+    return g(rels[k], 'impression', -999) > 1;
+  });
+
+  if (candidates.length === 0) {
+    html = '<div class="placeholder">暂无亲密关系</div>';
+  } else {
+    candidates.sort(function(a,b){
+      return g(rels[b], 'impression', 0) - g(rels[a], 'impression', 0);
+    });
+    candidates.forEach(function(k){
+      var v = rels[k];
+      var name = g(v, 'name', '?');
+      var imp = g(v, 'impression', 0);
+      var rel = g(v, 'relationship', '');
+      var known = g(v, 'known_since', '');
+      var ctx = g(v, 'context', {});
+      var sx = sexual[k];
+
+      var inSexual = sx !== undefined;
+      var statusStr = inSexual ? safeDisplay(g(sx, 'relationship_status', '')) : '';
+
+      var detail = '';
+      detail += '<div class="kv"><span class="k">关系</span><span class="v">'+safeDisplay(rel)+'</span></div>';
+      detail += '<div class="kv"><span class="k">好感</span><span class="v">'+imp+'</span></div>';
+      detail += '<div class="kv"><span class="k">结识于</span><span class="v">'+safeDisplay(known)+'</span></div>';
+      detail += '<div class="kv"><span class="k">当前情绪</span><span class="v">'+safeDisplay(g(ctx,'current_mood'))+'</span></div>';
+      detail += '<div class="kv"><span class="k">态度缘由</span><span class="v">'+safeDisplay(g(ctx,'attitude_reason'))+'</span></div>';
+      detail += '<div class="kv"><span class="k">关系期望</span><span class="v">'+safeDisplay(g(ctx,'relationship_goal'))+'</span></div>';
+      var taboos = g(ctx, 'taboos', []);
+      if (taboos.length > 0) detail += '<div class="kv"><span class="k">禁忌</span><span class="v">'+taboos.join('; ')+'</span></div>';
+      var promises = g(ctx, 'unresolved_promises', []);
+      if (promises.length > 0) detail += '<div class="kv"><span class="k">未了约定</span><span class="v">'+promises.join('; ')+'</span></div>';
+
+      if (inSexual) {
+        detail += '<div style="border-top:1px solid var(--border);margin:4px 0"></div>';
+        detail += '<div class="kv"><span class="k">亲密状态</span><span class="v">'+safeDisplay(g(sx,'relationship_status'))+'</span></div>';
+        detail += '<div class="kv"><span class="k">Virgin</span><span class="v">'+(g(sx,'virgin',true)?'是':'否, '+safeDisplay(g(sx,'virgin_exceptions',[]).join('; ')))+'</span></div>';
+        detail += '<div class="kv"><span class="k">Body Count</span><span class="v">'+safeDisplay(g(sx,'body_count',0))+'</span></div>';
+        var cycle = g(sx, 'cycle', {});
+        if (cycle.last_period_start) {
+          detail += '<div class="kv"><span class="k">生理周期</span><span class="v">'+safeDisplay(g(cycle,'phase'))+'</span></div>';
+        }
+        var preg = g(sx, 'pregnancy', {});
+        if (g(preg, 'is_pregnant')) {
+          detail += '<div class="kv"><span class="k">孕期</span><span class="v">第 '+safeDisplay(g(preg,'weeks'))+' 周</span></div>';
+        }
+      }
+
+      html += '<details class="lover-fold">';
+      html += '<summary><span class="n">'+safeDisplay(name)+'</span>';
+      if (statusStr) html += '<span class="s">'+statusStr+'</span>';
+      html += '<span class="i" style="color:'+impColor(imp)+'">'+imp+'</span></summary>';
+      html += '<div class="lover-detail">'+detail+'</div></details>';
+    });
+  }
+
+  document.getElementById('panel-lover').innerHTML = html;
+}
+
+// ===== 资产 =====
+function renderAssets(d) {
+  var ass = g(d, 'assets', {});
+  var html = '';
+
+  if (Object.keys(ass).length === 0) {
+    html = '<div class="placeholder">尚无资产数据</div>';
+  } else {
+    var cash = g(ass, 'cash');
+    var bank = g(ass, 'bank');
+    if (cash !== null || bank !== null) {
+      html += '<div class="sec-title">资金</div>';
+      if (cash !== null) html += '<div class="asset-row"><span class="l">现金</span><span class="r">'+Number(cash).toLocaleString()+'</span></div>';
+      if (bank !== null) html += '<div class="asset-row"><span class="l">银行存款</span><span class="r">'+Number(bank).toLocaleString()+'</span></div>';
+    }
+
+    var companies = g(ass, 'companies', {});
+    var compKeys = Object.keys(companies);
+    if (compKeys.length > 0) {
+      html += '<div class="sec-title">公司/股份</div>';
+      compKeys.forEach(function(k){
+        var c = companies[k];
+        html += '<div class="asset-row"><span class="l">'+safeDisplay(g(c,'name',k))+'</span><span class="r">'+safeDisplay(g(c,'shares',''))+'</span></div>';
+      });
+    }
+
+    var estates = g(ass, 'estates', {});
+    var estKeys = Object.keys(estates);
+    if (estKeys.length > 0) {
+      html += '<div class="sec-title">房产</div>';
+      estKeys.forEach(function(k){
+        var e = estates[k];
+        html += '<div class="asset-row"><span class="l">'+safeDisplay(g(e,'name',k))+'</span><span class="r">'+safeDisplay(g(e,'address',''))+'</span></div>';
+        if (g(e,'area')) html += '<div class="asset-sub"><span>面积</span><span>'+safeDisplay(g(e,'area'))+'</span></div>';
+        if (g(e,'value')) html += '<div class="asset-sub"><span>估值</span><span>'+Number(g(e,'value')).toLocaleString()+'</span></div>';
+      });
+    }
+
+    var vehicles = g(ass, 'vehicles', {});
+    var vehKeys = Object.keys(vehicles);
+    if (vehKeys.length > 0) {
+      html += '<div class="sec-title">车辆</div>';
+      vehKeys.forEach(function(k){
+        var v = vehicles[k];
+        html += '<div class="asset-row"><span class="l">'+safeDisplay(g(v,'name',k))+'</span><span class="r">'+safeDisplay(g(v,'plate',''))+'</span></div>';
+      });
+    }
+  }
+
+  document.getElementById('panel-assets').innerHTML = html;
+}
+
+// ===== 微信 =====
+function renderWx(d) {
+  var rels = g(d, 'npc_relations', {});
+  var keys = Object.keys(rels);
+  var html = '';
+
+  if (keys.length === 0) {
+    html = '<div class="placeholder">暂无联系人</div>';
+  } else {
+    var sorted = keys.map(function(k){
+      return {key:k, val:rels[k], since:g(rels[k], 'known_since', '2000-01-01')};
+    });
+    sorted.sort(function(a,b){ return b.since.localeCompare(a.since); });
+
+    sorted.slice(0, 15).forEach(function(item){
+      var v = item.val;
+      var name = g(v, 'name', '?');
+      var rel = g(v, 'relationship', '刚认识');
+      var mood = g(v, 'context.current_mood', '');
+      var imp = g(v, 'impression', 0);
+      var known = g(v, 'known_since', '');
+      var emoji = imp >= 50 ? '\u{1F60A}' : imp >= 1 ? '\u{1F642}' : imp >= -20 ? '\u{1F610}' : '\u{1F612}';
+      var preview = mood ? safeDisplay(mood).slice(0, 25) : '暂无新消息';
+      html += '<div class="wx-msg">';
+      html += '<div class="av">'+emoji+'</div>';
+      html += '<div class="body">';
+      html += '<div class="nn">'+safeDisplay(name)+' <span style="color:var(--text3);font-size:10px">'+safeDisplay(rel)+'</span></div>';
+      html += '<div class="tt">'+preview+'</div>';
+      html += '<div class="tm">'+known+'</div>';
+      html += '</div></div>';
+    });
+  }
+
+  document.getElementById('panel-wx').innerHTML = html;
+}
+
+// ===== 言灵 =====
+function renderGeass(d) {
+  var geass = g(d, 'geass', {});
+  var keys = Object.keys(geass);
+  var html = '';
+
+  if (keys.length === 0) {
+    html = '<div class="placeholder">尚未获得言灵</div>';
+  } else {
+    keys.forEach(function(k){
+      var v = geass[k];
+      html += '<div class="geass-item" style="padding:3px 6px;background:var(--card);border-radius:6px;font-size:12px;display:flex;justify-content:space-between;align-items:center">';
+      html += '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+safeDisplay(g(v,'name'))+'</span>';
+      html += '<span style="color:var(--text2);flex-shrink:0;margin-left:6px;font-size:11px">'+safeDisplay(g(v,'type'))+'</span>';
+      html += '<span style="color:var(--accent);flex-shrink:0;margin-left:6px">已用 '+safeDisplay(g(v,'total_uses',0))+' 次</span>';
+      html += '</div>';
+    });
+  }
+  document.getElementById('panel-geass').innerHTML = html || '<div class="placeholder">尚未获得言灵</div>';
+}
+
+// ===== Communication via postMessage =====
+var hasRendered = false;
+
+window.addEventListener('message', function(e) {
+  if (!e.data || e.data.type !== 'sb-data') return;
+  var sd = e.data.stat_data;
+  if (sd) {
+    try {
+      render(sd);
+      hasRendered = true;
+    } catch(err) {
+      document.getElementById('panel-state').innerHTML = '<div class="error">渲染错误</div>';
+    }
+  }
+});
+
+function requestData() {
+  try { window.parent.postMessage({type:'sb-getData'}, '*'); } catch(e) {}
+}
+
+// Poll for data until bridge responds
+requestData();
+var pollTimer = setInterval(function() {
+  if (!hasRendered) requestData();
+}, 2000);
+
+// --- tabs ---
+document.getElementById('tabs').addEventListener('click', function(e){
+  var tab = e.target.closest('.tab');
+  if (!tab) return;
+  var name = tab.getAttribute('data-tab');
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  tab.classList.add('active');
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  var panel = document.getElementById('panel-'+name);
+  if (panel) panel.classList.add('active');
+});
+
+})();
+</script>
+</body>
+</html>
