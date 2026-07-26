@@ -6,89 +6,162 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:rgba(18,22,28,0.92);
-  --card:rgba(30,38,48,0.85);
-  --border:rgba(200,170,110,0.25);
-  --accent:#c8ad6a;
-  --accent2:#e8d5a3;
-  --text:#e0ddd5;
-  --text2:#9a958c;
-  --text3:#6b665e;
-  --good:#6aad6a;
-  --bad:#ad6a6a;
-  --pink:#d4a0b8;
-  --radius:10px;
-  --shadow:0 2px 12px rgba(0,0,0,0.4);
-  font:14px/1.5 'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --card: #1c2333;
+  --card-hover: #222b3a;
+  --border: #30363d;
+  --border-accent: rgba(88,166,255,0.3);
+  --accent: #58a6ff;
+  --accent-glow: rgba(88,166,255,0.15);
+  --gold: #d4a853;
+  --gold-glow: rgba(212,168,83,0.15);
+  --green: #3fb950;
+  --green-bg: rgba(63,185,80,0.1);
+  --red: #f85149;
+  --red-bg: rgba(248,81,73,0.1);
+  --pink: #db61a2;
+  --pink-bg: rgba(219,97,162,0.1);
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #484f58;
+  --radius: 10px;
+  --radius-sm: 6px;
+  font: 13px/1.5 'Inter','PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
 }
-body{background:var(--bg);color:var(--text);padding:8px;min-width:220px}
-.sb{display:flex;flex-direction:column;gap:6px}
+body{background:var(--bg);color:var(--text);padding:10px;min-width:260px;max-width:400px}
 
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);padding-bottom:4px;overflow-x:auto}
-.tab{padding:4px 10px;cursor:pointer;border-radius:6px 6px 0 0;font-size:12px;color:var(--text2);transition:.2s;user-select:none;white-space:nowrap}
-.tab:hover{color:var(--accent2);background:rgba(200,170,110,0.08)}
-.tab.active{color:var(--accent);background:rgba(200,170,110,0.12);border-bottom:2px solid var(--accent)}
+/* ── Header ── */
+.sb-header{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 8px;margin-bottom:2px}
+.sb-header .logo{display:flex;align-items:center;gap:8px}
+.sb-header .logo .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.sb-header .logo .title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:0.5px}
+.sb-header .time-display{font-size:11px;color:var(--text2);background:var(--card);padding:3px 10px;border-radius:12px;border:1px solid var(--border)}
 
-.panel{display:none}
-.panel.active{display:flex;flex-direction:column;gap:4px}
+/* ── Tabs ── */
+.tabs{display:flex;gap:3px;padding:4px 2px;border-bottom:1px solid var(--border);margin-bottom:8px;overflow-x:auto}
+.tab{display:flex;align-items:center;gap:5px;padding:6px 12px;cursor:pointer;border-radius:var(--radius-sm);font-size:12px;color:var(--text2);transition:all .2s;user-select:none;white-space:nowrap;position:relative}
+.tab .ti{font-size:14px;line-height:1}
+.tab:hover{color:var(--text);background:var(--card)}
+.tab.active{color:var(--accent);background:var(--accent-glow)}
+.tab.active::after{content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:16px;height:2px;background:var(--accent);border-radius:1px}
 
-.row{display:flex;justify-content:space-between;align-items:center;padding:3px 6px;background:var(--card);border-radius:6px;font-size:13px}
-.row .l{color:var(--text2);flex-shrink:0;margin-right:8px}
-.row .r{color:var(--text);text-align:right;word-break:break-all}
+/* ── Panels ── */
+.panel{display:none;animation:fadeIn .2s ease}
+.panel.active{display:flex;flex-direction:column;gap:6px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-.placeholder{text-align:center;padding:16px;color:var(--text3);font-size:13px}
-.error{color:var(--bad);text-align:center;padding:8px;font-size:12px}
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;transition:border-color .2s}
+.card:hover{border-color:var(--border-accent)}
+.card-header{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.card-header .ch-icon{font-size:15px}
+.card-header .ch-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px}
 
-.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;background:rgba(200,170,110,0.15);color:var(--accent)}
-.badge.done{background:rgba(106,173,106,0.15);color:var(--good)}
-.badge.fail{background:rgba(173,106,106,0.15);color:var(--bad)}
+/* ── Stat rows ── */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0}
+.stat-row+.stat-row{border-top:1px solid rgba(48,54,61,0.5)}
+.stat-row .sl{color:var(--text2);font-size:12px;flex-shrink:0;min-width:60px}
+.stat-row .sr{color:var(--text);font-size:12px;text-align:right}
+.stat-row .sr.highlight{color:var(--accent);font-weight:600}
 
-.sec-title{font-size:11px;color:var(--text3);padding:2px 6px;margin-top:2px}
+/* ── Progress bar ── */
+.progress-wrap{display:flex;align-items:center;gap:8px}
+.progress-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.progress-fill.good{background:var(--green)}
+.progress-fill.warm{background:var(--gold)}
+.progress-fill.bad{background:var(--red)}
+.progress-val{font-size:11px;font-weight:600;min-width:30px;text-align:right}
 
-.lover-fold{margin-bottom:2px}
-.lover-fold summary{padding:4px 6px;background:var(--card);border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none}
-.lover-fold summary .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lover-fold summary .s{color:var(--pink);font-size:11px;flex-shrink:0}
-.lover-fold summary .i{font-size:11px;flex-shrink:0;min-width:20px;text-align:right}
-.lover-fold[open] summary{border-radius:6px 6px 0 0;border-bottom:1px solid var(--border)}
-.lover-detail{padding:4px 8px;background:rgba(30,38,48,0.5);border-radius:0 0 6px 6px;font-size:11px;line-height:1.6}
-.lover-detail .kv{display:flex;justify-content:space-between;padding:1px 0}
-.lover-detail .kv .k{color:var(--text3);flex-shrink:0;margin-right:8px}
-.lover-detail .kv .v{color:var(--text);text-align:right}
+/* ── Tags/Badges ── */
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500}
+.tag.blue{background:var(--accent-glow);color:var(--accent)}
+.tag.gold{background:var(--gold-glow);color:var(--gold)}
+.tag.green{background:var(--green-bg);color:var(--green)}
+.tag.red{background:var(--red-bg);color:var(--red)}
+.tag.pink{background:var(--pink-bg);color:var(--pink)}
 
-.wx-msg{padding:4px 6px;background:var(--card);border-radius:6px;font-size:12px;display:flex;gap:6px;align-items:flex-start}
-.wx-msg .av{width:28px;height:28px;border-radius:4px;background:rgba(200,170,110,0.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
-.wx-msg .body{flex:1;min-width:0}
-.wx-msg .body .nn{font-size:11px;color:var(--text2)}
-.wx-msg .body .tt{color:var(--text);margin-top:2px;font-size:12px;line-height:1.4}
-.wx-msg .body .tm{font-size:10px;color:var(--text3);text-align:right}
+/* ── Lover cards ── */
+.lover-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .2s}
+.lover-card:hover{border-color:var(--pink);box-shadow:0 0 8px rgba(219,97,162,0.1)}
+.lover-head{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;user-select:none}
+.lover-head .avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.lover-head .info{flex:1;min-width:0}
+.lover-head .info .name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lover-head .info .meta{font-size:11px;color:var(--text2);display:flex;gap:8px;margin-top:2px}
+.lover-head .imp{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.lover-head .imp .val{font-size:14px;font-weight:700}
+.lover-body{padding:8px 12px 10px;display:none;border-top:1px solid var(--border);font-size:11px;line-height:1.7}
+.lover-card.open .lover-body{display:block}
+.lover-body .lk{color:var(--text3);margin-right:6px}
+.lover-body .lv{color:var(--text)}
 
-.rep-inline{display:flex;gap:4px;flex-wrap:wrap;padding:2px 6px}
-.rep-chip{padding:1px 8px;border-radius:10px;font-size:11px;background:rgba(200,170,110,0.12);color:var(--accent);white-space:nowrap}
+/* ── Asset Cards ── */
+.asset-card{background:linear-gradient(135deg, var(--card) 0%, #1a2335 100%);border:1px solid var(--border);border-radius:var(--radius);padding:12px;position:relative;overflow:hidden}
+.asset-card::after{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:var(--accent-glow);opacity:.3;filter:blur(30px)}
+.asset-card .ac-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;position:relative;z-index:1}
+.asset-card .ac-value{font-size:22px;font-weight:700;color:var(--text);margin:4px 0;position:relative;z-index:1}
+.asset-card .ac-sub{font-size:11px;color:var(--text3);position:relative;z-index:1}
 
-.asset-row{display:flex;justify-content:space-between;padding:3px 6px;background:var(--card);border-radius:6px;font-size:13px}
-.asset-row .l{color:var(--accent)}
-.asset-row .r{color:var(--text)}
-.asset-sub{padding:2px 6px 2px 16px;font-size:12px;display:flex;justify-content:space-between;color:var(--text2)}
+/* ── Mini list ── */
+.mini-list{display:flex;flex-direction:column;gap:3px}
+.mini-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--card);border-radius:var(--radius-sm);font-size:12px}
+.mini-item .ml{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px}
+.mini-item .mr{color:var(--text2);flex-shrink:0}
+
+/* ── Section title ── */
+.section-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;padding:4px 2px 2px}
+
+/* ── Placeholder ── */
+.placeholder{text-align:center;padding:20px;color:var(--text3);font-size:12px}
+.placeholder .ph-icon{font-size:28px;margin-bottom:8px;opacity:.5}
+.placeholder .ph-text{line-height:1.6}
+
+/* ── Geass grid ── */
+.geass-grid{display:flex;flex-direction:column;gap:4px}
+.geass-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card);border-radius:var(--radius-sm);border:1px solid var(--border);transition:all .2s}
+.geass-item:hover{border-color:var(--border-accent)}
+.geass-item .gi-icon{width:32px;height:32px;border-radius:50%;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.geass-item .gi-info{flex:1;min-width:0}
+.geass-item .gi-name{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.geass-item .gi-meta{font-size:10px;color:var(--text2);margin-top:1px}
+.geass-item .gi-count{font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0}
+
+/* ── Reputation chips ── */
+.rep-row{display:flex;flex-wrap:wrap;gap:4px}
+.rep-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:500}
+.rep-chip .rc-dot{width:6px;height:6px;border-radius:50%}
 </style>
 </head>
 <body>
-<div class="sb" id="app">
-  <div class="tabs" id="tabs">
-    <div class="tab active" data-tab="state">状态</div>
-    <div class="tab" data-tab="map">地图</div>
-    <div class="tab" data-tab="lover">恋人</div>
-    <div class="tab" data-tab="assets">资产</div>
-    <div class="tab" data-tab="wx">微信</div>
-    <div class="tab" data-tab="geass">言灵</div>
+
+<!-- Header -->
+<div class="sb-header">
+  <div class="logo">
+    <div class="dot"></div>
+    <span class="title">言灵穿越</span>
   </div>
-  <div class="panel active" id="panel-state"></div>
-  <div class="panel" id="panel-map"></div>
-  <div class="panel" id="panel-lover"></div>
-  <div class="panel" id="panel-assets"></div>
-  <div class="panel" id="panel-wx"></div>
-  <div class="panel" id="panel-geass"></div>
+  <div class="time-display" id="header-date">--</div>
 </div>
+
+<!-- Tabs -->
+<div class="tabs" id="tabs">
+  <div class="tab active" data-tab="state"><span class="ti">👤</span>状态</div>
+  <div class="tab" data-tab="map"><span class="ti">📌</span>地图</div>
+  <div class="tab" data-tab="lover"><span class="ti">💕</span>恋人</div>
+  <div class="tab" data-tab="assets"><span class="ti">💰</span>资产</div>
+  <div class="tab" data-tab="wx"><span class="ti">💬</span>微信</div>
+  <div class="tab" data-tab="geass"><span class="ti">✨</span>言灵</div>
+</div>
+
+<!-- Panels -->
+<div class="panel active" id="panel-state"></div>
+<div class="panel" id="panel-map"></div>
+<div class="panel" id="panel-lover"></div>
+<div class="panel" id="panel-assets"></div>
+<div class="panel" id="panel-wx"></div>
+<div class="panel" id="panel-geass"></div>
 
 <script>
 (function(){
@@ -123,14 +196,6 @@ function safeDisplay(val, maxDepth) {
   return String(val);
 }
 
-function impColor(val) {
-  if (val >= 51) return '#6aad6a';
-  if (val >= 21) return '#8ab86a';
-  if (val >= -20) return '#c8ad6a';
-  if (val >= -50) return '#ad8a6a';
-  return '#ad6a6a';
-}
-
 function calcAge(birth, current) {
   if (!birth || !current) return null;
   var b = birth.split('-').map(Number);
@@ -141,145 +206,171 @@ function calcAge(birth, current) {
   return age;
 }
 
+function impColor(val) {
+  if (val >= 51) return 'var(--green)';
+  if (val >= 21) return 'var(--accent)';
+  if (val >= -20) return 'var(--gold)';
+  if (val >= -50) return '#d4773a';
+  return 'var(--red)';
+}
+
+function impProgress(val) {
+  var pct = Math.max(0, Math.min(100, (val + 100) / 2));
+  var cls = val >= 50 ? 'good' : val >= 0 ? 'warm' : 'bad';
+  return { pct: pct, cls: cls };
+}
+
 function render(data) {
   if (!data) {
-    document.querySelectorAll('.panel').forEach(function(p){ p.innerHTML = '<div class="placeholder">等待数据…</div>'; });
+    document.querySelectorAll('.panel').forEach(function(p){ p.innerHTML = '<div class="placeholder"><div class="ph-icon">⏳</div><div class="ph-text">等待数据同步...</div></div>'; });
     return;
   }
-  renderState(data);
-  renderMap(data);
-  renderLover(data);
-  renderAssets(data);
-  renderWx(data);
-  renderGeass(data);
-  // Notify parent iframe to resize
+  try {
+    renderState(data);
+    renderMap(data);
+    renderLover(data);
+    renderAssets(data);
+    renderWx(data);
+    renderGeass(data);
+    // Update header date
+    var el = document.getElementById('header-date');
+    if (el && data.time && data.time.current_date) {
+      el.textContent = data.time.current_date + '  Day ' + (data.time.day_count || 0);
+    }
+  } catch(e) {}
   try {
     if (window.parent && window.parent !== window) {
-      var h = document.body.scrollHeight;
-      window.parent.postMessage({ type: 'sb-resize', height: h }, '*');
+      window.parent.postMessage({ type: 'sb-resize', height: document.body.scrollHeight }, '*');
     }
   } catch(e) {}
 }
 
 // ===== 状态 =====
 function renderState(d) {
-  var html = '';
+  var h = '';
   var user = g(d, 'user', {});
   var time = g(d, 'time', {});
   var sit = g(d, 'situation', {});
   var tasks = g(d, 'tasks', {});
   var items = g(d, 'items', {});
 
+  // Profile card
+  h += '<div class="card">';
+  h += '<div class="card-header"><span class="ch-icon">👤</span><span class="ch-title">个人档案</span></div>';
   var name = g(user, 'name', '未设置');
   var birth = g(user, 'birth_date', '');
   var curDate = g(time, 'current_date', '');
   var age = calcAge(birth, curDate);
   var gender = g(user, 'gender', '');
   var height = g(user, 'height', '');
-  var appearance = g(user, 'appearance', '');
-  var clothing = g(user, 'clothing_style', '');
-  var devices = g(user, 'devices', {});
+  h += '<div class="stat-row"><span class="sl">姓名</span><span class="sr highlight">'+safeDisplay(name)+'</span></div>';
+  var ageStr = age !== null ? age + ' 岁' : '-';
+  h += '<div class="stat-row"><span class="sl">性别 / 年龄</span><span class="sr">'+(gender||'-')+' · '+ageStr+'</span></div>';
+  if (height) h += '<div class="stat-row"><span class="sl">身高</span><span class="sr">'+height+' cm</span></div>';
   var bg = g(user, 'background', {});
+  if (g(bg,'current_status')) h += '<div class="stat-row"><span class="sl">当前</span><span class="sr" style="font-size:11px">'+safeDisplay(g(bg,'current_status'))+'</span></div>';
+  if (g(bg,'residence')) h += '<div class="stat-row"><span class="sl">住所</span><span class="sr" style="font-size:11px">'+safeDisplay(g(bg,'residence'))+'</span></div>';
+  h += '</div>';
 
-  html += '<div class="row"><span class="l">姓名</span><span class="r">'+safeDisplay(name)+'</span></div>';
-  if (gender) html += '<div class="row"><span class="l">性别</span><span class="r">'+gender+'</span></div>';
-  var ageStr = age !== null ? age + ' 岁' : safeDisplay(birth);
-  html += '<div class="row"><span class="l">年龄</span><span class="r">'+ageStr+'</span></div>';
-  if (height) html += '<div class="row"><span class="l">身高</span><span class="r">'+height+' cm</span></div>';
-  if (appearance) html += '<div class="row"><span class="l">外貌</span><span class="r" style="font-size:12px;max-width:180px">'+safeDisplay(appearance)+'</span></div>';
-  if (clothing) html += '<div class="row"><span class="l">穿衣风格</span><span class="r" style="font-size:12px;max-width:180px">'+safeDisplay(clothing)+'</span></div>';
-  if (g(devices,'phone') || g(devices,'laptop')) {
-    var phoneDev = g(devices,'phone') ? g(devices,'phone') : '';
-    var laptopDev = g(devices,'laptop') ? g(devices,'laptop') : '';
-    html += '<div class="row"><span class="l">设备</span><span class="r" style="font-size:11px;text-align:right">'+phoneDev+(phoneDev&&laptopDev?'<br>':'')+laptopDev+'</span></div>';
-  }
-  if (g(bg,'birthplace')) html += '<div class="row"><span class="l">出生地</span><span class="r" style="font-size:12px">'+safeDisplay(g(bg,'birthplace'))+'</span></div>';
-
+  // Situation
   var cur = g(sit, 'current');
   if (cur) {
-    html += '<div class="row"><span class="l">当前状态</span><span class="r" style="font-size:12px;max-width:180px">'+safeDisplay(cur)+'</span></div>';
+    h += '<div class="card">';
+    h += '<div class="stat-row"><span class="sl">📍 当前处境</span><span class="sr" style="font-size:11px;max-width:200px">'+safeDisplay(cur)+'</span></div>';
+    h += '</div>';
   }
 
+  // Items
   var itemKeys = typeof items === 'object' ? Object.keys(items) : [];
   if (itemKeys.length > 0) {
-    html += '<div class="sec-title">物品</div>';
+    h += '<div class="section-title">随身物品</div>';
+    h += '<div class="mini-list">';
     itemKeys.forEach(function(k){
       var v = items[k];
-      var qty = g(v, 'quantity', 1);
-      html += '<div class="row"><span class="l">'+safeDisplay(g(v,'name',k))+'</span><span class="r">x'+qty+'</span></div>';
+      h += '<div class="mini-item"><span class="ml">'+safeDisplay(g(v,'name',k))+'</span><span class="mr">x'+safeDisplay(g(v,'quantity',1))+'</span></div>';
     });
+    h += '</div>';
   }
 
+  // Tasks
   var taskArr = typeof tasks === 'object' ? Object.keys(tasks).map(function(k){return tasks[k]}) : [];
-  var active = taskArr.filter(function(t){return g(t,'status')==='进行中'});
-  var done = taskArr.filter(function(t){return g(t,'status')==='已完成'});
-  var fail = taskArr.filter(function(t){return g(t,'status')==='已失败'});
   if (taskArr.length > 0) {
-    html += '<div class="sec-title">任务</div>';
-    html += '<div class="row"><span class="l">总数</span><span class="r">'+taskArr.length+'</span></div>';
-    html += '<div class="row"><span class="l">进行中</span><span class="r"><span class="badge">'+active.length+'</span></span></div>';
-    if (done.length) html += '<div class="row"><span class="l">已完成</span><span class="r"><span class="badge done">'+done.length+'</span></span></div>';
-    if (fail.length) html += '<div class="row"><span class="l">已失败</span><span class="r"><span class="badge fail">'+fail.length+'</span></span></div>';
+    h += '<div class="section-title">任务</div>';
+    h += '<div class="card">';
+    var active = taskArr.filter(function(t){return g(t,'status')==='进行中'});
+    var done = taskArr.filter(function(t){return g(t,'status')==='已完成'});
+    var fails = taskArr.filter(function(t){return g(t,'status')==='已失败'});
+    h += '<div style="display:flex;gap:6px;margin-bottom:6px">';
+    h += '<span class="tag blue">进行中 '+active.length+'</span>';
+    if (done.length) h += '<span class="tag green">已完成 '+done.length+'</span>';
+    if (fails.length) h += '<span class="tag red">已失败 '+fails.length+'</span>';
+    h += '</div>';
+    taskArr.slice(0,4).forEach(function(t){
+      var cls = g(t,'status')==='已完成'?'green':g(t,'status')==='已失败'?'red':'';
+      h += '<div class="stat-row"><span class="sl">'+safeDisplay(g(t,'name'))+'</span><span class="sr" style="color:var(--'+(cls||'text2')+')">'+safeDisplay(g(t,'status'))+'</span></div>';
+    });
+    h += '</div>';
   }
 
-  document.getElementById('panel-state').innerHTML = html || '<div class="placeholder">暂无状态数据</div>';
+  document.getElementById('panel-state').innerHTML = h || '<div class="placeholder"><div class="ph-icon">📋</div><div class="ph-text">暂无数据</div></div>';
 }
 
 // ===== 地图 =====
 function renderMap(d) {
-  var html = '';
+  var h = '';
   var time = g(d, 'time', {});
-  var dateStr = safeDisplay(g(time,'current_date'));
-  var dayCount = safeDisplay(g(time,'day_count'));
-
-  html += '<div class="sec-title">时间</div>';
-  html += '<div class="row"><span class="l">日期</span><span class="r">'+dateStr+'</span></div>';
-  html += '<div class="row"><span class="l">穿越第</span><span class="r">'+dayCount+' 天</span></div>';
-
   var sit = g(d, 'situation', {});
-  var curLoc = g(sit, 'current');
-  var knownRegions = g(d, 'world.known_regions', {});
-  var locLib = g(d, 'world.location_library', {});
-
-  html += '<div class="sec-title">位置</div>';
-  if (curLoc) {
-    html += '<div class="row"><span class="l">当前</span><span class="r" style="font-size:12px;max-width:200px">'+safeDisplay(curLoc)+'</span></div>';
-  }
-
-  var locKeys = Object.keys(locLib);
-  if (locKeys.length > 0) {
-    locKeys.slice(0, 3).forEach(function(k){
-      var v = locLib[k];
-      html += '<div class="row" style="flex-wrap:wrap"><span class="l">'+safeDisplay(g(v,'name',k))+'</span><span class="r" style="font-size:11px;max-width:150px">'+safeDisplay(g(v,'description')).slice(0,40)+'</span></div>';
-    });
-  }
-
-  var regKeys = Object.keys(knownRegions);
-  if (regKeys.length > 0) {
-    html += '<div class="sec-title">已探索区域</div>';
-    regKeys.slice(0, 4).forEach(function(k){
-      var v = knownRegions[k];
-      html += '<div class="row"><span class="l">'+safeDisplay(g(v,'name')||k)+'</span><span class="r" style="font-size:11px">'+safeDisplay(g(v,'description')).slice(0,25)+'</span></div>';
-    });
-    if (regKeys.length > 4) html += '<div class="placeholder" style="padding:2px">还有 '+(regKeys.length-4)+' 个区域</div>';
-  }
-
+  var world = g(d, 'world', {});
   var rep = g(d, 'reputation', {});
+
+  // Time card
+  h += '<div class="card">';
+  h += '<div class="card-header"><span class="ch-icon">🕐</span><span class="ch-title">时间线</span></div>';
+  h += '<div class="stat-row"><span class="sl">日期</span><span class="sr highlight">'+safeDisplay(g(time,'current_date'))+'</span></div>';
+  h += '<div class="stat-row"><span class="sl">穿越第</span><span class="sr">'+safeDisplay(g(time,'day_count'))+' 天</span></div>';
+  h += '</div>';
+
+  // Location
+  var curLoc = g(sit, 'current');
+  if (curLoc) {
+    h += '<div class="card">';
+    h += '<div class="card-header"><span class="ch-icon">📍</span><span class="ch-title">当前位置</span></div>';
+    h += '<div style="font-size:12px;color:var(--text);line-height:1.6">'+safeDisplay(curLoc)+'</div>';
+    h += '</div>';
+  }
+
+  // Locations
+  var locLib = g(world, 'location_library', {});
+  var regs = g(world, 'known_regions', {});
+  var locKeys = Object.keys(locLib);
+  var regKeys = Object.keys(regs);
+  if (locKeys.length > 0 || regKeys.length > 0) {
+    h += '<div class="section-title">已探索</div>';
+    h += '<div class="mini-list">';
+    locKeys.slice(0,3).forEach(function(k){
+      var v = locLib[k];
+      h += '<div class="mini-item"><span class="ml">📍 '+safeDisplay(g(v,'name',k))+'</span><span class="mr" style="font-size:10px">'+safeDisplay(g(v,'visited_date')).slice(0,10)+'</span></div>';
+    });
+    if (locKeys.length > 3) h += '<div class="placeholder" style="padding:4px;font-size:11px">...还有 '+(locKeys.length-3)+' 个地点</div>';
+    h += '</div>';
+  }
+
+  // Reputation
   var repKeys = Object.keys(rep);
   if (repKeys.length > 0) {
-    html += '<div class="sec-title">声望</div>';
-    html += '<div class="rep-inline">';
+    h += '<div class="section-title">声望</div>';
+    h += '<div class="rep-row">';
     repKeys.forEach(function(k){
       var v = rep[k];
       var val = g(v, 'value', 0);
       var label = g(v, 'label', k);
-      var color = val >= 0 ? 'var(--good)' : 'var(--bad)';
-      html += '<span class="rep-chip" style="color:'+color+'">'+safeDisplay(label)+' ('+val+')</span>';
+      var dotColor = val >= 0 ? 'var(--green)' : 'var(--red)';
+      h += '<span class="rep-chip" style="background:rgba(88,166,255,0.08);color:var(--text)"><span class="rc-dot" style="background:'+dotColor+'"></span>'+safeDisplay(label)+' <span style="color:'+(val>=0?'var(--green)':'var(--red)')+'">'+val+'</span></span>';
     });
-    html += '</div>';
+    h += '</div>';
   }
 
-  document.getElementById('panel-map').innerHTML = html || '<div class="placeholder">暂无数据</div>';
+  document.getElementById('panel-map').innerHTML = h || '<div class="placeholder"><div class="ph-icon">🗺️</div><div class="ph-text">暂无数据</div></div>';
 }
 
 // ===== 恋人 =====
@@ -287,19 +378,19 @@ function renderLover(d) {
   var rels = g(d, 'npc_relations', {});
   var sexual = g(d, 'sexual', {});
   var keys = Object.keys(rels);
-  var html = '';
+  var h = '';
 
   var candidates = keys.filter(function(k){
     return g(rels[k], 'impression', -999) > 1;
   });
 
   if (candidates.length === 0) {
-    html = '<div class="placeholder">暂无亲密关系</div>';
+    h = '<div class="placeholder"><div class="ph-icon">💕</div><div class="ph-text">暂无亲密关系<br>多与 NPC 互动吧</div></div>';
   } else {
     candidates.sort(function(a,b){
       return g(rels[b], 'impression', 0) - g(rels[a], 'impression', 0);
     });
-    candidates.forEach(function(k){
+    candidates.forEach(function(k, idx){
       var v = rels[k];
       var name = g(v, 'name', '?');
       var imp = g(v, 'impression', 0);
@@ -307,108 +398,113 @@ function renderLover(d) {
       var known = g(v, 'known_since', '');
       var ctx = g(v, 'context', {});
       var sx = sexual[k];
-
       var inSexual = sx !== undefined;
       var statusStr = inSexual ? safeDisplay(g(sx, 'relationship_status', '')) : '';
+      var ip = impProgress(imp);
+      var avatars = ['🌸','🌟','🦋','🌙','💎','🎀','🍀','🌺'];
+      var avatar = avatars[idx % avatars.length];
 
       var detail = '';
-      detail += '<div class="kv"><span class="k">关系</span><span class="v">'+safeDisplay(rel)+'</span></div>';
-      detail += '<div class="kv"><span class="k">好感</span><span class="v">'+imp+'</span></div>';
-      detail += '<div class="kv"><span class="k">结识于</span><span class="v">'+safeDisplay(known)+'</span></div>';
-      detail += '<div class="kv"><span class="k">当前情绪</span><span class="v">'+safeDisplay(g(ctx,'current_mood'))+'</span></div>';
-      detail += '<div class="kv"><span class="k">态度缘由</span><span class="v">'+safeDisplay(g(ctx,'attitude_reason'))+'</span></div>';
-      detail += '<div class="kv"><span class="k">关系期望</span><span class="v">'+safeDisplay(g(ctx,'relationship_goal'))+'</span></div>';
+      detail += '<div><span class="lk">关系</span><span class="lv">'+safeDisplay(rel)+'</span></div>';
+      detail += '<div><span class="lk">结识</span><span class="lv">'+safeDisplay(known)+'</span></div>';
+      detail += '<div><span class="lk">情绪</span><span class="lv">'+safeDisplay(g(ctx,'current_mood'))+'</span></div>';
+      detail += '<div><span class="lk">缘由</span><span class="lv">'+safeDisplay(g(ctx,'attitude_reason'))+'</span></div>';
       var taboos = g(ctx, 'taboos', []);
-      if (taboos.length > 0) detail += '<div class="kv"><span class="k">禁忌</span><span class="v">'+taboos.join('; ')+'</span></div>';
-      var promises = g(ctx, 'unresolved_promises', []);
-      if (promises.length > 0) detail += '<div class="kv"><span class="k">未了约定</span><span class="v">'+promises.join('; ')+'</span></div>';
+      if (taboos.length > 0) detail += '<div><span class="lk">禁忌</span><span class="lv">'+taboos.join('; ')+'</span></div>';
 
       if (inSexual) {
-        detail += '<div style="border-top:1px solid var(--border);margin:4px 0"></div>';
-        detail += '<div class="kv"><span class="k">亲密状态</span><span class="v">'+safeDisplay(g(sx,'relationship_status'))+'</span></div>';
-        detail += '<div class="kv"><span class="k">Virgin</span><span class="v">'+(g(sx,'virgin',true)?'是':'否, '+safeDisplay(g(sx,'virgin_exceptions',[]).join('; ')))+'</span></div>';
-        detail += '<div class="kv"><span class="k">Body Count</span><span class="v">'+safeDisplay(g(sx,'body_count',0))+'</span></div>';
+        detail += '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"></div>';
+        detail += '<div><span class="lk">状态</span><span class="lv">'+safeDisplay(g(sx,'relationship_status'))+'</span></div>';
+        detail += '<div><span class="lk">经验</span><span class="lv">'+(g(sx,'virgin',true)?'未経験':'body count '+safeDisplay(g(sx,'body_count',0)))+'</span></div>';
         var cycle = g(sx, 'cycle', {});
-        if (cycle.last_period_start) {
-          detail += '<div class="kv"><span class="k">生理周期</span><span class="v">'+safeDisplay(g(cycle,'phase'))+'</span></div>';
-        }
+        if (g(cycle,'phase')) detail += '<div><span class="lk">周期</span><span class="lv">'+safeDisplay(g(cycle,'phase'))+'</span></div>';
         var preg = g(sx, 'pregnancy', {});
-        if (g(preg, 'is_pregnant')) {
-          detail += '<div class="kv"><span class="k">孕期</span><span class="v">第 '+safeDisplay(g(preg,'weeks'))+' 周</span></div>';
-        }
+        if (g(preg, 'is_pregnant')) detail += '<div><span class="lk">孕期</span><span class="lv" style="color:var(--pink)">第 '+safeDisplay(g(preg,'weeks'))+' 周</span></div>';
       }
 
-      html += '<details class="lover-fold">';
-      html += '<summary><span class="n">'+safeDisplay(name)+'</span>';
-      if (statusStr) html += '<span class="s">'+statusStr+'</span>';
-      html += '<span class="i" style="color:'+impColor(imp)+'">'+imp+'</span></summary>';
-      html += '<div class="lover-detail">'+detail+'</div></details>';
+      h += '<div class="lover-card'+(idx===0?' open':'')+'">';
+      h += '<div class="lover-head" onclick="var c=this.parentElement;c.classList.toggle(\'open\')">';
+      h += '<div class="avatar" style="background:linear-gradient(135deg,'+(imp>=50?'var(--green-bg)':imp>=0?'var(--accent-glow)':'var(--red-bg)')+')">'+avatar+'</div>';
+      h += '<div class="info"><div class="name">'+safeDisplay(name)+'</div>';
+      h += '<div class="meta">';
+      if (statusStr) h += '<span class="tag pink">'+statusStr+'</span>';
+      h += '<span>'+safeDisplay(rel)+'</span>';
+      h += '</div></div>';
+      h += '<div class="imp">';
+      h += '<div class="progress-wrap" style="width:70px"><div class="progress-bar"><div class="progress-fill '+ip.cls+'" style="width:'+ip.pct+'%"></div></div></div>';
+      h += '<span class="val" style="color:'+impColor(imp)+'">'+imp+'</span>';
+      h += '</div></div>';
+      h += '<div class="lover-body">'+detail+'</div>';
+      h += '</div>';
     });
   }
 
-  document.getElementById('panel-lover').innerHTML = html;
+  document.getElementById('panel-lover').innerHTML = h;
 }
 
 // ===== 资产 =====
 function renderAssets(d) {
   var ass = g(d, 'assets', {});
-  var html = '';
+  var h = '';
 
   if (Object.keys(ass).length === 0) {
-    html = '<div class="placeholder">尚无资产数据</div>';
+    h = '<div class="placeholder"><div class="ph-icon">💰</div><div class="ph-text">尚无资产数据</div></div>';
   } else {
     var cash = g(ass, 'cash');
     var bank = g(ass, 'bank');
     if (cash !== null || bank !== null) {
-      html += '<div class="sec-title">资金</div>';
-      if (cash !== null) html += '<div class="asset-row"><span class="l">现金</span><span class="r">'+Number(cash).toLocaleString()+'</span></div>';
-      if (bank !== null) html += '<div class="asset-row"><span class="l">银行存款</span><span class="r">'+Number(bank).toLocaleString()+'</span></div>';
+      h += '<div style="display:flex;gap:8px;margin-bottom:8px">';
+      if (cash !== null) {
+        h += '<div class="asset-card" style="flex:1"><div class="ac-label">💰 现金</div><div class="ac-value">¥'+Number(cash).toLocaleString()+'</div></div>';
+      }
+      if (bank !== null) {
+        h += '<div class="asset-card" style="flex:1"><div class="ac-label">🏦 银行存款</div><div class="ac-value">¥'+Number(bank).toLocaleString()+'</div></div>';
+      }
+      h += '</div>';
     }
 
     var companies = g(ass, 'companies', {});
-    var compKeys = Object.keys(companies);
-    if (compKeys.length > 0) {
-      html += '<div class="sec-title">公司/股份</div>';
-      compKeys.forEach(function(k){
+    if (Object.keys(companies).length > 0) {
+      h += '<div class="section-title">公司 / 股份</div><div class="mini-list">';
+      Object.keys(companies).forEach(function(k){
         var c = companies[k];
-        html += '<div class="asset-row"><span class="l">'+safeDisplay(g(c,'name',k))+'</span><span class="r">'+safeDisplay(g(c,'shares',''))+'</span></div>';
+        h += '<div class="mini-item"><span class="ml">🏢 '+safeDisplay(g(c,'name',k))+'</span><span class="mr">'+safeDisplay(g(c,'shares',''))+'</span></div>';
       });
+      h += '</div>';
     }
 
     var estates = g(ass, 'estates', {});
-    var estKeys = Object.keys(estates);
-    if (estKeys.length > 0) {
-      html += '<div class="sec-title">房产</div>';
-      estKeys.forEach(function(k){
+    if (Object.keys(estates).length > 0) {
+      h += '<div class="section-title">房产</div><div class="mini-list">';
+      Object.keys(estates).forEach(function(k){
         var e = estates[k];
-        html += '<div class="asset-row"><span class="l">'+safeDisplay(g(e,'name',k))+'</span><span class="r">'+safeDisplay(g(e,'address',''))+'</span></div>';
-        if (g(e,'area')) html += '<div class="asset-sub"><span>面积</span><span>'+safeDisplay(g(e,'area'))+'</span></div>';
-        if (g(e,'value')) html += '<div class="asset-sub"><span>估值</span><span>'+Number(g(e,'value')).toLocaleString()+'</span></div>';
+        h += '<div class="mini-item"><span class="ml">🏠 '+safeDisplay(g(e,'name',k))+'</span><span class="mr" style="font-size:10px">'+safeDisplay(g(e,'address',''))+'</span></div>';
       });
+      h += '</div>';
     }
 
     var vehicles = g(ass, 'vehicles', {});
-    var vehKeys = Object.keys(vehicles);
-    if (vehKeys.length > 0) {
-      html += '<div class="sec-title">车辆</div>';
-      vehKeys.forEach(function(k){
+    if (Object.keys(vehicles).length > 0) {
+      h += '<div class="section-title">车辆</div><div class="mini-list">';
+      Object.keys(vehicles).forEach(function(k){
         var v = vehicles[k];
-        html += '<div class="asset-row"><span class="l">'+safeDisplay(g(v,'name',k))+'</span><span class="r">'+safeDisplay(g(v,'plate',''))+'</span></div>';
+        h += '<div class="mini-item"><span class="ml">🚗 '+safeDisplay(g(v,'name',k))+'</span><span class="mr">'+safeDisplay(g(v,'plate',''))+'</span></div>';
       });
+      h += '</div>';
     }
   }
 
-  document.getElementById('panel-assets').innerHTML = html;
+  document.getElementById('panel-assets').innerHTML = h;
 }
 
 // ===== 微信 =====
 function renderWx(d) {
   var rels = g(d, 'npc_relations', {});
   var keys = Object.keys(rels);
-  var html = '';
+  var h = '';
 
   if (keys.length === 0) {
-    html = '<div class="placeholder">暂无联系人</div>';
+    h = '<div class="placeholder"><div class="ph-icon">💬</div><div class="ph-text">暂无联系人</div></div>';
   } else {
     var sorted = keys.map(function(k){
       return {key:k, val:rels[k], since:g(rels[k], 'known_since', '2000-01-01')};
@@ -418,51 +514,61 @@ function renderWx(d) {
     sorted.slice(0, 15).forEach(function(item){
       var v = item.val;
       var name = g(v, 'name', '?');
-      var rel = g(v, 'relationship', '刚认识');
+      var rel = g(v, 'relationship', '');
       var mood = g(v, 'context.current_mood', '');
       var imp = g(v, 'impression', 0);
       var known = g(v, 'known_since', '');
-      var emoji = imp >= 50 ? '\u{1F60A}' : imp >= 1 ? '\u{1F642}' : imp >= -20 ? '\u{1F610}' : '\u{1F612}';
-      var preview = mood ? safeDisplay(mood).slice(0, 25) : '暂无新消息';
-      html += '<div class="wx-msg">';
-      html += '<div class="av">'+emoji+'</div>';
-      html += '<div class="body">';
-      html += '<div class="nn">'+safeDisplay(name)+' <span style="color:var(--text3);font-size:10px">'+safeDisplay(rel)+'</span></div>';
-      html += '<div class="tt">'+preview+'</div>';
-      html += '<div class="tm">'+known+'</div>';
-      html += '</div></div>';
+      var emoji = imp >= 50 ? '😊' : imp >= 1 ? '🙂' : imp >= -20 ? '😐' : '😶';
+      var preview = mood ? safeDisplay(mood).slice(0, 30) : '暂无消息';
+      var ip = impProgress(imp);
+
+      h += '<div class="card" style="display:flex;gap:10px;align-items:center;padding:8px 10px;cursor:default">';
+      h += '<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,'+(imp>=50?'var(--green-bg)':imp>=0?'var(--accent-glow)':'var(--red-bg)')+');display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+emoji+'</div>';
+      h += '<div style="flex:1;min-width:0">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:center">';
+      h += '<span style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+safeDisplay(name)+'</span>';
+      h += '<span style="font-size:10px;color:var(--text3);flex-shrink:0">'+known+'</span>';
+      h += '</div>';
+      h += '<div style="display:flex;align-items:center;gap:6px;margin-top:2px">';
+      h += '<span style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+preview+'</span>';
+      h += '</div>';
+      h += '<div style="margin-top:3px"><div class="progress-wrap" style="width:100%"><div class="progress-bar"><div class="progress-fill '+ip.cls+'" style="width:'+ip.pct+'%"></div></div><span style="font-size:10px;color:'+impColor(imp)+';min-width:24px;text-align:right;margin-left:4px">'+imp+'</span></div></div>';
+      h += '</div></div>';
     });
   }
 
-  document.getElementById('panel-wx').innerHTML = html;
+  document.getElementById('panel-wx').innerHTML = h;
 }
 
 // ===== 言灵 =====
 function renderGeass(d) {
   var geass = g(d, 'geass', {});
   var keys = Object.keys(geass);
-  var html = '';
+  var h = '';
 
   if (keys.length === 0) {
-    html = '<div class="placeholder">尚未获得言灵</div>';
+    h = '<div class="placeholder"><div class="ph-icon">✨</div><div class="ph-text">尚未获得言灵能力</div></div>';
   } else {
+    h += '<div class="geass-grid">';
     keys.forEach(function(k){
       var v = geass[k];
-      html += '<div class="geass-item" style="padding:3px 6px;background:var(--card);border-radius:6px;font-size:12px;display:flex;justify-content:space-between;align-items:center">';
-      html += '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+safeDisplay(g(v,'name'))+'</span>';
-      html += '<span style="color:var(--text2);flex-shrink:0;margin-left:6px;font-size:11px">'+safeDisplay(g(v,'type'))+'</span>';
-      html += '<span style="color:var(--accent);flex-shrink:0;margin-left:6px">已用 '+safeDisplay(g(v,'total_uses',0))+' 次</span>';
-      html += '</div>';
+      var types = g(v,'type','能力');
+      var typeIcon = types.indexOf('攻击')>=0?'⚔️':types.indexOf('防御')>=0?'🛡️':types.indexOf('辅助')>=0?'💊':'✨';
+      h += '<div class="geass-item">';
+      h += '<div class="gi-icon">'+typeIcon+'</div>';
+      h += '<div class="gi-info"><div class="gi-name">'+safeDisplay(g(v,'name'))+'</div><div class="gi-meta">'+safeDisplay(g(v,'description')).slice(0,40)+'</div></div>';
+      h += '<div class="gi-count">×'+safeDisplay(g(v,'total_uses',0))+'</div>';
+      h += '</div>';
     });
+    h += '</div>';
   }
-  document.getElementById('panel-geass').innerHTML = html || '<div class="placeholder">尚未获得言灵</div>';
+  document.getElementById('panel-geass').innerHTML = h;
 }
 
 // ===== Data from Mvu =====
 var hasRendered = false;
 
 function findMvu() {
-  // Walk up the frame tree looking for Mvu
   try { if (typeof Mvu !== 'undefined' && Mvu.getMvuData) return { ref: Mvu, src: 'window' }; } catch(e) {}
   var w = window;
   for (var i = 0; i < 5; i++) {
@@ -482,10 +588,8 @@ function getStatData() {
     try {
       var raw = info.ref.getMvuData({ type: 'chat' });
       if (!raw) return null;
-      // Mvu stores data under raw.stat_data
       var sd = raw.stat_data;
       if (!sd) return null;
-      // Unwrap double-nesting: stat_data.stat_data.{user,time,...}
       if (sd.stat_data && typeof sd.stat_data === 'object' && sd.stat_data.user) {
         return { data: sd.stat_data, mvuSrc: info.src, nesting: 'double' };
       }
@@ -510,21 +614,17 @@ function initStatusbar() {
         return true;
       }
       if (result.error && !hasRendered) {
-        dbg.innerHTML = '<div class="row"><span class="l">MVU来源</span><span class="r">' + (result.mvuSrc || '?') + '</span></div>' +
-        '<div class="error">读取错误: ' + result.error + '</div>' +
-        '<div class="placeholder">尝试重连中...</div>';
+        dbg.innerHTML = '<div class="placeholder"><div class="ph-icon">⚠️</div><div class="ph-text">读取错误: '+result.error+'<br>来源: '+(result.mvuSrc||'?')+'</div></div>';
       }
     }
     if (!hasRendered) {
-      dbg.innerHTML = '<div class="placeholder">等待MVU数据...</div>';
+      dbg.innerHTML = '<div class="placeholder"><div class="ph-icon">⏳</div><div class="ph-text">等待 MVU 数据...</div></div>';
     }
     return false;
   }
 
-  // Immediate attempt
   if (tryRender()) return;
 
-  // Listen to MVU events from parent
   var info = findMvu();
   if (info) {
     try {
@@ -538,7 +638,6 @@ function initStatusbar() {
     } catch(e) {}
   }
 
-  // postMessage fallback (request data from parent)
   if (window.parent && window.parent !== window) {
     window.parent.postMessage({ type: 'rw-sb-request' }, '*');
     window.addEventListener('message', function(e) {
@@ -550,7 +649,6 @@ function initStatusbar() {
     });
   }
 
-  // Aggressive polling (every 2s up to 30 attempts)
   var attempt = 0;
   var poll = setInterval(function() {
     if (hasRendered) { clearInterval(poll); return; }
@@ -560,7 +658,6 @@ function initStatusbar() {
   }, 2000);
 }
 
-// Wait for DOM and start
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() { setTimeout(initStatusbar, 500); });
 } else {
