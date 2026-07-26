@@ -458,84 +458,106 @@ function renderGeass(d) {
   document.getElementById('panel-geass').innerHTML = html || '<div class="placeholder">尚未获得言灵</div>';
 }
 
-// ===== Data from Mvu (direct, no iframe bridge needed) =====
+// ===== Data from Mvu =====
 var hasRendered = false;
 
-function getMvuRef() {
-  try { if (typeof Mvu !== 'undefined' && Mvu.getMvuData) return Mvu; } catch(e) {}
-  try { if (parent && parent.Mvu && parent.Mvu.getMvuData) return parent.Mvu; } catch(e) {}
-  try { if (parent && parent.parent && parent.parent.Mvu && parent.parent.Mvu.getMvuData) return parent.parent.Mvu; } catch(e) {}
+function findMvu() {
+  // Walk up the frame tree looking for Mvu
+  try { if (typeof Mvu !== 'undefined' && Mvu.getMvuData) return { ref: Mvu, src: 'window' }; } catch(e) {}
+  var w = window;
+  for (var i = 0; i < 5; i++) {
+    try {
+      if (w.parent && w.parent !== w) {
+        w = w.parent;
+        if (w.Mvu && w.Mvu.getMvuData) return { ref: w.Mvu, src: 'parentL' + (i + 1) };
+      } else break;
+    } catch(e) { break; }
+  }
   return null;
 }
 
 function getStatData() {
-  var m = getMvuRef();
-  if (m) {
+  var info = findMvu();
+  if (info) {
     try {
-      var data = m.getMvuData({type:'chat'});
-      if (data && data.stat_data) {
-        // Handle double-nested stat_data (InitVar bug)
-        var sd = data.stat_data;
-        if (sd && sd.stat_data && typeof sd.stat_data === 'object' && sd.stat_data.user) return sd.stat_data;
-        return sd;
+      var raw = info.ref.getMvuData({ type: 'chat' });
+      if (!raw) return null;
+      // Mvu stores data under raw.stat_data
+      var sd = raw.stat_data;
+      if (!sd) return null;
+      // Unwrap double-nesting: stat_data.stat_data.{user,time,...}
+      if (sd.stat_data && typeof sd.stat_data === 'object' && sd.stat_data.user) {
+        return { data: sd.stat_data, mvuSrc: info.src, nesting: 'double' };
       }
-    } catch(e) {}
-  }
-  try {
-    if (typeof getVariables === 'function') {
-      var v = getVariables({type:'chat'});
-      if (v && v.stat_data) {
-        var sd2 = v.stat_data;
-        if (sd2 && sd2.stat_data && typeof sd2.stat_data === 'object' && sd2.stat_data.user) return sd2.stat_data;
-        return sd2;
-      }
-      return v;
+      return { data: sd, mvuSrc: info.src, nesting: 'single' };
+    } catch(e) {
+      return { error: e.message, mvuSrc: info.src };
     }
-  } catch(e) {}
+  }
   return null;
 }
 
 function initStatusbar() {
-  var m = getMvuRef();
+  var dbg = document.getElementById('panel-state');
+  if (!dbg) return;
 
-  // Try direct data first
-  var sd = getStatData();
-  if (sd) { render(sd); hasRendered = true; }
+  function tryRender() {
+    var result = getStatData();
+    if (result) {
+      if (result.data) {
+        render(result.data);
+        hasRendered = true;
+        return true;
+      }
+      if (result.error && !hasRendered) {
+        dbg.innerHTML = '<div class="row"><span class="l">MVU来源</span><span class="r">' + (result.mvuSrc || '?') + '</span></div>' +
+        '<div class="error">读取错误: ' + result.error + '</div>' +
+        '<div class="placeholder">尝试重连中...</div>';
+      }
+    }
+    if (!hasRendered) {
+      dbg.innerHTML = '<div class="placeholder">等待MVU数据...</div>';
+    }
+    return false;
+  }
 
-  // Listen for Mvu updates
-  if (m) {
+  // Immediate attempt
+  if (tryRender()) return;
+
+  // Listen to MVU events from parent
+  var info = findMvu();
+  if (info) {
     try {
-      m.on('mag_variable_update_ended', function() {
-        setTimeout(function() {
-          var d = getStatData();
-          if (d) render(d);
-        }, 500);
+      info.ref.on('mag_variable_initiailized', function() {
+        setTimeout(tryRender, 500);
+        setTimeout(tryRender, 3000);
       });
-      m.on('mag_variable_initiailized', function() {
-        setTimeout(function() {
-          var d = getStatData();
-          if (d) { render(d); hasRendered = true; }
-        }, 1500);
+      info.ref.on('mag_variable_update_ended', function() {
+        setTimeout(tryRender, 500);
       });
     } catch(e) {}
   }
 
-  // Fallback: listen for postMessage (for iframe mode)
-  window.addEventListener('message', function(e) {
-    if (hasRendered) return;
-    if (!e.data || e.data.type !== 'sb-data') return;
-    var d = e.data.stat_data;
-    if (d) { render(d); hasRendered = true; }
-  });
-
-  // Poll as last resort
-  if (!hasRendered) {
-    var ft = setInterval(function() {
-      if (hasRendered) { clearInterval(ft); return; }
-      var d = getStatData();
-      if (d) { render(d); hasRendered = true; clearInterval(ft); }
-    }, 3000);
+  // postMessage fallback (request data from parent)
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'rw-sb-request' }, '*');
+    window.addEventListener('message', function(e) {
+      if (!e.data) return;
+      if (e.data.type === 'sb-data' && e.data.stat_data) {
+        render(e.data.stat_data);
+        hasRendered = true;
+      }
+    });
   }
+
+  // Aggressive polling (every 2s up to 30 attempts)
+  var attempt = 0;
+  var poll = setInterval(function() {
+    if (hasRendered) { clearInterval(poll); return; }
+    attempt++;
+    if (attempt > 30) { clearInterval(poll); return; }
+    tryRender();
+  }, 2000);
 }
 
 // Wait for DOM and start
