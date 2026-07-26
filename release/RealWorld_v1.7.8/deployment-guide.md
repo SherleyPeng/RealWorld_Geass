@@ -33,17 +33,21 @@
 - 关键词触发（姓名），建议角色专用、按需启用
 
 ### 6. 状态栏（可选）
-- 路径：`statusbar/index.html`
+- 路径：正则 `regex/01-statusbar.json` 已内嵌完整状态栏（方式 A）
 - 部署方式：
 
-  **方式 B · 本地文件：**
+  **方式 A · 正则内嵌（推荐，已配置）**
+   1. 直接导入 `regex/01-statusbar.json` 到 SillyTavern → 扩展 → 正则 → 导入
+   2. 无需额外部署 statusbar 文件或桥接脚本
+   3. 正则自动将 AI 输出的 `<status_bar></status_bar>` 占位符替换为可视化状态栏
+
+  **方式 B · 独立 HTML 文件（备选）**
    1. 将 `statusbar/index.html` 复制到 SillyTavern 的 `data/` 目录下：
       - 旧版：`SillyTavern/data/statusbar/index.html`
       - 新版（v1.12+）：`SillyTavern/data/<用户名>/statusbar/index.html`
-   2. 正则 `regex/01-statusbar.json` 已默认配置 iframe `src="/data/statusbar/index.html"`
-   3. 导入正则后即可生效
+   2. 修改 `regex/01-statusbar.json` 的 `replaceString` 指向本地方案
 
-  > 其他方式参考：**方式 A**（内嵌进正则）需手动做 HTML 实体转义后替换 `replaceString`；**方式 C**（CDN）需上传到 GitHub 后修改 `src`
+  > 状态栏已改为**直接读取 Mvu 变量数据**，无需 iframe 桥接脚本（`statusbar-bridge.js` 已废弃，不再需要导入）。
 
 ### 7. 配套脚本（可选）
 - 路径：`scripts/02-guardian.json` / `03-detector.json` / `04-observer.json`
@@ -59,7 +63,8 @@
 ### 8. 正则 — 状态栏注入
 - 路径：`regex/01-statusbar.json`
 - 导入方式：扩展 → 正则 → 导入
-- 此正则自动将 AI 输出的 `<status_bar></status_bar>` 占位符替换为可视化状态栏 iframe
+- 此正则自动将 AI 输出的 `<status_bar></status_bar>` 占位符替换为可视化状态栏（内嵌 HTML+CSS+JS）
+- 状态栏直接从 Mvu 读取变量数据，无需 iframe 桥接脚本
 - 确保正则状态为启用
 
 ## 配置检查

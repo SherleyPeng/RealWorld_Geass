@@ -1,8 +1,8 @@
 {
   "id": "6a8b3c2d-9f41-4e7a-bd05-1e8c2f4a6b01",
-  "scriptName": "[美化] 状态栏注入",
+  "scriptName": "[美化] 状态栏注入 v1.8.0",
   "findRegex": "/<status_bar>([\\s\\S]*?)<\\/status_bar>/gi",
-  "replaceString": "<div style=\"width:100%;margin:8px auto;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.3);background:rgba(18,22,28,0.95);min-height:200px;\"><iframe src=\"https://cdn.jsdelivr.net/gh/SherleyPeng/RealWorld_Geass@HEAD/statusbar/index.html\" style=\"width:100%;height:580px;border:none;display:block;\"></iframe></div>",
+  "replaceString": "<body>\n<script>\n$('body').load('https://cdn.jsdelivr.net/gh/SherleyPeng/RealWorld_Geass/statusbar/index.html')\n</script>\n</body>",
   "trimStrings": [],
   "placement": [2],
   "disabled": false,

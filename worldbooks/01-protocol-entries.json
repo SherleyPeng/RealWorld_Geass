@@ -3,7 +3,7 @@
     "1": {
       "uid": 1,
       "title": "[mvu_update] 变量更新规则 · 总纲",
-      "content": "stat_data 变量通过 RFC 6902 JSONPatch 更新。\n\n每轮只输出当前轮实际发生的变更，不重写未变字段。\n\n允许的操作：\n- replace：改已有字段值。路径用 / 分隔。例：\n  [{\"op\":\"replace\",\"path\":\"/time/current_date\",\"value\":\"2013-06-15\"}]\n- add：新增 keyed record 条目。例：\n  [{\"op\":\"add\",\"path\":\"/tasks/task_001\",\"value\":{\"name\":\"...\",\"type\":\"主线\",...}}]\n- remove：删除条目。避免使用，除非确认该条目不再需要。\n\n新增条目时：\n1. 检查 /_meta/uid_counters/对应前缀 获取下一个 ID\n2. 使用 \"前缀_NNN\" 格式作为 key（例如 geass_001, tasks_003）\n3. 创建后把计数器 +1\n\n时间推进规则：\n- 只有 user 说 \"过了 N 天\" 时 AI 才更新 time.current_date\n- 更新日期后自动重算所有 sexual.*.cycle.phase\n- cycle.phase 按标准生理周期推算：月经期1-5天 / 卵泡期6-13天 / 排卵期14-16天 / 黄体期17-28天\n\n节日与重要日期存储在每年的世界书内，不在 stat_data 中重复。",
+      "content": "每轮回复末尾必须输出 <UpdateVariable> 块，将本轮实际发生的状态变更打包为 JSONPatch。\n\n格式：\n<UpdateVariable>\n<analysis>\n简短描述本轮发生的每项状态变更（每行对应至少一个 patch）\n</analysis>\n<JSONPatch>\n[\n  {\"op\":\"replace\",\"path\":\"/time/current_date\",\"value\":\"2013-06-15\"},\n  {\"op\":\"add\",\"path\":\"/tasks/task_001\",\"value\":{\"name\":\"...\",...}}\n]\n</JSONPatch>\n</UpdateVariable>\n\nstat_data 变量通过 RFC 6902 JSONPatch 更新。每轮只输出当前轮实际发生的变更，不重写未变字段。\n\n允许的操作：\n- replace：改已有字段值。路径用 / 分隔\n- add：新增 record 条目\n- remove：删除条目。避免使用\n- move：字段迁移\n\n新增条目时：\n1. 检查 /_meta/uid_counters/对应前缀 获取下一个 ID\n2. 使用 \"前缀_NNN\" 格式作为 key（例如 geass_001, tasks_003）\n3. 创建后把计数器 +1\n\n时间推进规则：\n- 只有 user 说 \"过了 N 天\" 时 AI 才更新 time.current_date\n- 更新日期后自动重算所有 sexual.*.cycle.phase\n- cycle.phase 按标准生理周期推算：月经期1-5天 / 卵泡期6-13天 / 排卵期14-16天 / 黄体期17-28天\n\n节日与重要日期存储在每年的世界书内，不在 stat_data 中重复。",
       "keys": [],
       "select": {},
       "disable": false,

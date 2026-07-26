@@ -152,6 +152,13 @@ function render(data) {
   renderAssets(data);
   renderWx(data);
   renderGeass(data);
+  // Notify parent iframe to resize
+  try {
+    if (window.parent && window.parent !== window) {
+      var h = document.body.scrollHeight;
+      window.parent.postMessage({ type: 'sb-resize', height: h }, '*');
+    }
+  } catch(e) {}
 }
 
 // ===== 状态 =====
@@ -451,31 +458,92 @@ function renderGeass(d) {
   document.getElementById('panel-geass').innerHTML = html || '<div class="placeholder">尚未获得言灵</div>';
 }
 
-// ===== Communication via postMessage =====
+// ===== Data from Mvu (direct, no iframe bridge needed) =====
 var hasRendered = false;
 
-window.addEventListener('message', function(e) {
-  if (!e.data || e.data.type !== 'sb-data') return;
-  var sd = e.data.stat_data;
-  if (sd) {
-    try {
-      render(sd);
-      hasRendered = true;
-    } catch(err) {
-      document.getElementById('panel-state').innerHTML = '<div class="error">渲染错误</div>';
-    }
-  }
-});
-
-function requestData() {
-  try { window.parent.postMessage({type:'sb-getData'}, '*'); } catch(e) {}
+function getMvuRef() {
+  try { if (typeof Mvu !== 'undefined' && Mvu.getMvuData) return Mvu; } catch(e) {}
+  try { if (parent && parent.Mvu && parent.Mvu.getMvuData) return parent.Mvu; } catch(e) {}
+  try { if (parent && parent.parent && parent.parent.Mvu && parent.parent.Mvu.getMvuData) return parent.parent.Mvu; } catch(e) {}
+  return null;
 }
 
-// Poll for data until bridge responds
-requestData();
-var pollTimer = setInterval(function() {
-  if (!hasRendered) requestData();
-}, 2000);
+function getStatData() {
+  var m = getMvuRef();
+  if (m) {
+    try {
+      var data = m.getMvuData({type:'chat'});
+      if (data && data.stat_data) {
+        // Handle double-nested stat_data (InitVar bug)
+        var sd = data.stat_data;
+        if (sd && sd.stat_data && typeof sd.stat_data === 'object' && sd.stat_data.user) return sd.stat_data;
+        return sd;
+      }
+    } catch(e) {}
+  }
+  try {
+    if (typeof getVariables === 'function') {
+      var v = getVariables({type:'chat'});
+      if (v && v.stat_data) {
+        var sd2 = v.stat_data;
+        if (sd2 && sd2.stat_data && typeof sd2.stat_data === 'object' && sd2.stat_data.user) return sd2.stat_data;
+        return sd2;
+      }
+      return v;
+    }
+  } catch(e) {}
+  return null;
+}
+
+function initStatusbar() {
+  var m = getMvuRef();
+
+  // Try direct data first
+  var sd = getStatData();
+  if (sd) { render(sd); hasRendered = true; }
+
+  // Listen for Mvu updates
+  if (m) {
+    try {
+      m.on('mag_variable_update_ended', function() {
+        setTimeout(function() {
+          var d = getStatData();
+          if (d) render(d);
+        }, 500);
+      });
+      m.on('mag_variable_initiailized', function() {
+        setTimeout(function() {
+          var d = getStatData();
+          if (d) { render(d); hasRendered = true; }
+        }, 1500);
+      });
+    } catch(e) {}
+  }
+
+  // Fallback: listen for postMessage (for iframe mode)
+  window.addEventListener('message', function(e) {
+    if (hasRendered) return;
+    if (!e.data || e.data.type !== 'sb-data') return;
+    var d = e.data.stat_data;
+    if (d) { render(d); hasRendered = true; }
+  });
+
+  // Poll as last resort
+  if (!hasRendered) {
+    var ft = setInterval(function() {
+      if (hasRendered) { clearInterval(ft); return; }
+      var d = getStatData();
+      if (d) { render(d); hasRendered = true; clearInterval(ft); }
+    }, 3000);
+  }
+}
+
+// Wait for DOM and start
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(initStatusbar, 500); });
+} else {
+  setTimeout(initStatusbar, 500);
+}
 
 // --- tabs ---
 document.getElementById('tabs').addEventListener('click', function(e){

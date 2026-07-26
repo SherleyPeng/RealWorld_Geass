@@ -10,26 +10,58 @@ const ROOT = __dirname;
 
 // ── helpers ──
 
+function isProtocolEntry(title) {
+  return /^\[(mvu_update|mvu_plot|InitVar)\]/.test(title) || title === '当前变量';
+}
+
 function makeEntry(uid, title, content, extra = {}) {
+  const isProtocol = isProtocolEntry(title);
   return {
-    uid,
+    id: uid,
     comment: title,
     content,
-    constant: extra.constant ?? false,
-    enabled: extra.enabled ?? true,
-    order: extra.order ?? 100,
-    position: extra.position ?? 0,
-    depth: extra.depth ?? 4,
-    use_regex: false,
     keys: extra.keys ?? [],
-    keysecondary: [],
-    display_index: 0,
-    recursion: {
-      delay_until: null,
-      prevent_outgoing: true,
-      prevent_incoming: true
-    },
-    selectiveLogic: 0
+    secondary_keys: [],
+    constant: extra.constant ?? isProtocol,
+    selective: false,
+    selectiveLogic: 0,
+    insertion_order: extra.order ?? 100,
+    enabled: extra.enabled ?? true,
+    position: 'before_char',
+    use_regex: false,
+    extensions: {
+      position: 0,
+      exclude_recursion: true,
+      display_index: extra.order ?? 100,
+      probability: 100,
+      useProbability: true,
+      depth: extra.depth ?? 4,
+      selectiveLogic: 0,
+      outlet_name: '',
+      group: '',
+      group_override: false,
+      group_weight: 100,
+      prevent_recursion: false,
+      delay_until_recursion: false,
+      scan_depth: null,
+      match_whole_words: null,
+      use_group_scoring: false,
+      case_sensitive: null,
+      automation_id: '',
+      role: 0,
+      vectorized: false,
+      sticky: 0,
+      cooldown: 0,
+      delay: 0,
+      match_persona_description: false,
+      match_character_description: false,
+      match_character_personality: false,
+      match_character_depth_prompt: false,
+      match_scenario: false,
+      match_creator_notes: false,
+      triggers: [],
+      ignore_budget: false
+    }
   };
 }
 
@@ -70,10 +102,8 @@ for (const file of wbFiles) {
   for (const e of entryList) {
     uidCounter++;
     const extra = {
-      constant: e.constant ?? false,
       enabled: !e.disable,
-      order: e.order ?? 100,
-      position: e.position ?? 0,
+      order: e.position ?? 100,
       depth: e.depth ?? 4,
       keys: e.keys ?? []
     };
@@ -127,8 +157,8 @@ console.log(`Scripts: ${tavernScripts.length} embedded\n`);
 // ── 6. Assemble card ──
 
 const card = {
-  spec: 'chara_card_v2',
-  spec_version: '2.0',
+  spec: 'chara_card_v3',
+  spec_version: '3.0',
   data: {
     name: '真实世界·言灵穿越',
     description: description.trim(),
@@ -138,7 +168,7 @@ const card = {
     post_history_instructions: '',
     tags: ['真实世界', '言灵穿越', '3D建模', '北京2013', '平行世界'],
     creator: 'RealWorld Project',
-    character_version: '1.7.8',
+    character_version: '1.8.0',
     personality: '',
     scenario: '',
     mes_example: '',
@@ -169,6 +199,8 @@ fs.writeFileSync(outputPath, JSON.stringify(card), 'utf8');
 
 const stats = fs.statSync(outputPath);
 console.log(`character-card.json: ${(stats.size / 1024).toFixed(0)} KB`);
+console.log(`  spec: ${card.spec}`);
+console.log(`  version: ${card.data.character_version}`);
 console.log(`  entries: ${allEntries.length}`);
 console.log(`  regex: ${regexScripts.length}`);
 console.log(`  scripts: ${tavernScripts.length}`);
