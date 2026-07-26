@@ -139,6 +139,10 @@ const card = {
     tags: ['真实世界', '言灵穿越', '3D建模', '北京2013', '平行世界'],
     creator: 'RealWorld Project',
     character_version: '1.7.8',
+    personality: '',
+    scenario: '',
+    mes_example: '',
+    creator_notes: '',
     character_book: {
       entries: allEntries,
       extensions: {},
