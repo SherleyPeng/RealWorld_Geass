@@ -10,8 +10,7 @@
 
 你盯着手机屏幕，慢慢坐起来。
 
-<status_bar>
-</status_bar>
+<StatusPlaceHolderImpl/>
 
 — 你要怎么做？
 >
