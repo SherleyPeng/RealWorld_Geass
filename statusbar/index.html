@@ -727,7 +727,7 @@ html, body {
     entries(rels).forEach(function (e) {
       var rel = String(g(e.val, 'relationship', ''));
       if (/恋人|女友|后宫|情人|包养|奴隶|宠物|禁脔|炮友|妻子|未婚妻/.test(rel)) {
-        if (!list.some(function (x) { return x.key === e.key; }) && withUserSexCount(g(sexual, e.key, {})) >= 1) {
+        if (!list.some(function (x) { return x.key === e.key; })) {
           list.push({ key: e.key, val: g(sexual, e.key, {}) });
         }
       }
