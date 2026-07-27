@@ -39,6 +39,10 @@ html, body {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0,0,0,.45);
+  height: 470px;
+  max-height: 470px;
+  display: flex;
+  flex-direction: column;
 }
 .topbar {
   display: flex;
@@ -48,6 +52,7 @@ html, body {
   padding: 8px 12px;
   background: linear-gradient(90deg, #1a1520 0%, #141820 50%, #121820 100%);
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 .topbar .brand {
   font-size: 11px;
@@ -78,6 +83,7 @@ html, body {
   background: var(--panel);
   border-bottom: 1px solid var(--border);
   scrollbar-width: none;
+  flex-shrink: 0;
 }
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
@@ -116,9 +122,12 @@ html, body {
 .panel {
   display: none;
   padding: 12px;
-  max-height: 420px;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--bg);
+  box-sizing: border-box;
 }
 .panel.active { display: block; }
 .panel::-webkit-scrollbar { width: 5px; }
@@ -218,6 +227,7 @@ html, body {
   color: var(--accent2);
   font-variant-numeric: tabular-nums;
 }
+.stat-cell .n.pink { color: var(--pink); }
 .stat-cell .l { font-size: 10px; color: var(--dim); margin-top: 2px; }
 
 .tag {
@@ -281,6 +291,23 @@ html, body {
   background: rgba(232,106,106,.15);
   color: var(--red);
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.body-desc {
+  margin-top: 4px;
+  padding: 6px 8px;
+  background: var(--panel);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.body-desc .label {
+  color: var(--accent2);
+  font-size: 11px;
+  margin-bottom: 2px;
 }
 </style>
 </head>
@@ -319,6 +346,8 @@ html, body {
 
   var state = null;
   var isDemo = false;
+  /** 记住已展开的 details，避免定时重绘导致立刻折叠 */
+  var openFolds = {};
 
   function $(id) { return document.getElementById(id); }
 
@@ -348,7 +377,6 @@ html, body {
     if (data.display_data) {
       var dd = data.display_data;
       if (dd.stat_data && (dd.stat_data.user || dd.stat_data.time)) dd = dd.stat_data;
-      // prefer live stat_data for structure
     }
     return sd;
   }
@@ -393,11 +421,10 @@ html, body {
     if (typeof c === 'number') return c;
     c = g(sx, 'with_user_count', null);
     if (typeof c === 'number') return c;
-    // fallback sum
     var w = g(sx, 'with_user', {});
     if (w && typeof w === 'object') {
       var sum = 0;
-      ['vaginal', 'oral', 'anal', 'breast', 'service', 'creampie', 'total'].forEach(function (k) {
+      ['vaginal', 'oral', 'breast', 'anal', 'service', 'creampie', 'total'].forEach(function (k) {
         if (k !== 'total' && typeof w[k] === 'number') sum += w[k];
       });
       if (typeof w.total === 'number') return w.total;
@@ -406,10 +433,33 @@ html, body {
     return 0;
   }
 
-  function isHarem(npcKey, sd) {
-    var sx = g(sd, 'sexual.' + npcKey, null) || g(sd, 'sexual', {})[npcKey];
-    if (!sx) return false;
-    return withUserSexCount(sx) >= 1;
+  function saveOpenFolds(panelId) {
+    var panel = $(panelId);
+    if (!panel) return;
+    panel.querySelectorAll('details.fold[data-fold-id]').forEach(function (d) {
+      var id = d.getAttribute('data-fold-id');
+      if (id) openFolds[id] = d.open;
+    });
+  }
+
+  function restoreOpenFolds(panelId) {
+    var panel = $(panelId);
+    if (!panel) return;
+    panel.querySelectorAll('details.fold[data-fold-id]').forEach(function (d) {
+      var id = d.getAttribute('data-fold-id');
+      if (id && openFolds[id]) d.open = true;
+    });
+  }
+
+  function bindFoldListeners(panelId) {
+    var panel = $(panelId);
+    if (!panel) return;
+    panel.querySelectorAll('details.fold[data-fold-id]').forEach(function (d) {
+      d.addEventListener('toggle', function () {
+        var id = d.getAttribute('data-fold-id');
+        if (id) openFolds[id] = d.open;
+      });
+    });
   }
 
   /* ---------- tabs ---------- */
@@ -452,6 +502,12 @@ html, body {
     var cash = g(sd, 'assets.cash', 0);
     var wealthHint = '';
     var total = (typeof bank === 'number' ? bank : 0) + (typeof cash === 'number' ? cash : 0);
+    // also sum banks
+    var banks = g(sd, 'assets.banks', {});
+    entries(banks).forEach(function (e) {
+      var bal = g(e.val, 'balance', e.val);
+      if (typeof bal === 'number') total += bal;
+    });
     if (total >= 1e8) wealthHint = '超级富豪';
     else if (total >= 1e7) wealthHint = '富豪';
     else if (total >= 1e6) wealthHint = '高净值';
@@ -522,34 +578,152 @@ html, body {
     $('panel-map').innerHTML = html;
   }
 
+  /** 将对象字段拼成可读描述；优先 description 字段，其余键值并列 */
+  function formatBodyPart(obj, fallbackKeys) {
+    if (obj == null || obj === '') return '';
+    if (typeof obj === 'string' || typeof obj === 'number') return String(obj);
+    if (typeof obj !== 'object') return '';
+    var desc = g(obj, 'description', '') || g(obj, 'desc', '') || g(obj, 'detail', '');
+    var parts = [];
+    var keys = fallbackKeys || Object.keys(obj);
+    keys.forEach(function (k) {
+      if (k === 'description' || k === 'desc' || k === 'detail' || k === '$meta') return;
+      var v = obj[k];
+      if (v == null || v === '') return;
+      if (typeof v === 'object') return;
+      parts.push(String(v));
+    });
+    var typeLine = parts.join(' · ');
+    if (desc && typeLine) return typeLine + '\n' + desc;
+    if (desc) return desc;
+    return typeLine;
+  }
+
   function sexStatsBlock(sx) {
     var wu = g(sx, 'with_user', {}) || {};
+    // 生涯分项：优先 lifetime / body_count 对象，否则仅总次数
+    var life = g(sx, 'lifetime', null) || g(sx, 'body_count', null) || g(sx, 'lifetime_stats', null) || {};
     var totalLife = g(sx, 'body_count_times', null);
-    if (totalLife == null) totalLife = g(sx, 'total_sex_count', 0);
-    var withUser = typeof wu.total === 'number' ? wu.total : withUserSexCount(sx);
+    if (totalLife == null) totalLife = g(sx, 'total_sex_count', null);
+    if (totalLife == null && typeof life.total === 'number') totalLife = life.total;
+    if (totalLife == null) totalLife = 0;
 
-    var html = '<div class="section-title">性爱统计</div>';
+    function cell(n, label, pink) {
+      return '<div class="stat-cell"><div class="n' + (pink ? ' pink' : '') + '">' + esc(n == null ? 0 : n) + '</div><div class="l">' + label + '</div></div>';
+    }
+
+    var html = '<div class="section-title">生涯性爱统计</div>';
     html += '<div class="stat-grid">';
-    html += '<div class="stat-cell"><div class="n">' + esc(totalLife) + '</div><div class="l">生涯总次数</div></div>';
-    html += '<div class="stat-cell"><div class="n pink">' + esc(withUser) + '</div><div class="l">与主角</div></div>';
-    html += '<div class="stat-cell"><div class="n">' + esc(wu.vaginal || 0) + '</div><div class="l">性交</div></div>';
-    html += '<div class="stat-cell"><div class="n">' + esc(wu.oral || 0) + '</div><div class="l">口交</div></div>';
-    html += '<div class="stat-cell"><div class="n">' + esc(wu.breast || 0) + '</div><div class="l">乳交</div></div>';
-    html += '<div class="stat-cell"><div class="n">' + esc(wu.anal || 0) + '</div><div class="l">肛交</div></div>';
-    html += '<div class="stat-cell"><div class="n">' + esc(wu.service || 0) + '</div><div class="l">侍奉</div></div>';
-    html += '<div class="stat-cell"><div class="n">' + esc(wu.creampie || 0) + '</div><div class="l">内射</div></div>';
+    html += cell(totalLife, '生涯总次数');
+    html += cell(g(life, 'vaginal', g(life, 'vaginal_count', 0)), '性交');
+    html += cell(g(life, 'oral', g(life, 'oral_count', 0)), '口交');
+    html += cell(g(life, 'breast', g(life, 'breast_count', 0)), '乳交');
+    html += cell(g(life, 'anal', g(life, 'anal_count', 0)), '肛交');
+    html += cell(g(life, 'service', g(life, 'service_count', 0)), '侍奉');
+    html += cell(g(life, 'creampie', g(life, 'creampie_count', 0)), '内射');
+    html += '</div>';
+    if (!life || (!life.vaginal && !life.oral && !life.breast && !life.anal && !life.service && !life.creampie)) {
+      html += '<div class="dim" style="font-size:11px;margin-top:4px">（生涯分项待世界书写入 lifetime 对象后显示）</div>';
+    }
+
+    html += '<div class="section-title">与主角</div>';
+    html += '<div class="stat-grid">';
+    html += cell(typeof wu.total === 'number' ? wu.total : withUserSexCount(sx), '合计', true);
+    html += cell(wu.vaginal || 0, '性交', true);
+    html += cell(wu.oral || 0, '口交', true);
+    html += cell(wu.breast || 0, '乳交', true);
+    html += cell(wu.anal || 0, '肛交', true);
+    html += cell(wu.service || 0, '侍奉', true);
+    html += cell(wu.creampie || 0, '内射', true);
     html += '</div>';
     return html;
   }
 
+  function bodySpecsBlock(sx) {
+    var body = g(sx, 'body_specs', null) || g(sx, 'body_features', null) || g(sx, 'body', null) || {};
+    if (!body || typeof body !== 'object') return '';
+
+    var html = '<div class="section-title">身体特征</div>';
+
+    // 面容
+    var face = g(body, 'face', g(sx, 'face', null));
+    var faceStr = formatBodyPart(face, ['features', 'makeup', 'lips', 'expression']);
+    if (faceStr) {
+      html += '<div class="kv"><div class="k">面容</div><div class="v">' + esc(faceStr.split('\n')[0]) + '</div></div>';
+      if (faceStr.indexOf('\n') >= 0) {
+        html += '<div class="body-desc"><div class="label">面容描写</div>' + esc(faceStr.split('\n').slice(1).join('\n')) + '</div>';
+      }
+    }
+
+    // 胸部
+    var breast = g(body, 'breast', g(sx, 'breast', null));
+    var breastStr = formatBodyPart(breast, ['cup', 'shape', 'nipple', 'areola', 'sensitivity']);
+    if (breastStr) {
+      var lines = breastStr.split('\n');
+      html += '<div class="kv"><div class="k">胸部</div><div class="v">' + esc(lines[0]) + '</div></div>';
+      if (lines.length > 1) {
+        html += '<div class="body-desc"><div class="label">胸部描写</div>' + esc(lines.slice(1).join('\n')) + '</div>';
+      } else if (breast && typeof breast === 'object' && (g(breast, 'description') || g(breast, 'desc'))) {
+        html += '<div class="body-desc"><div class="label">胸部描写</div>' + esc(g(breast, 'description') || g(breast, 'desc')) + '</div>';
+      }
+    }
+
+    // 腰臀
+    var waist = g(body, 'waist_hip', g(body, 'waist', g(sx, 'waist', null)));
+    var waistStr = formatBodyPart(waist, ['waist', 'hips', 'hips_shape', 'thighs']);
+    if (waistStr) {
+      html += '<div class="kv"><div class="k">腰臀</div><div class="v">' + esc(waistStr.split('\n')[0]) + '</div></div>';
+      if (waistStr.indexOf('\n') >= 0) {
+        html += '<div class="body-desc"><div class="label">腰臀描写</div>' + esc(waistStr.split('\n').slice(1).join('\n')) + '</div>';
+      }
+    }
+
+    // 小穴 / genitals
+    var genitals = g(body, 'genitals', g(sx, 'genitals', g(body, 'pussy', null)));
+    var genStr = formatBodyPart(genitals, ['type', 'color', 'hair', 'wetness', 'tightness', 'inner']);
+    if (genStr) {
+      var gl = genStr.split('\n');
+      html += '<div class="kv"><div class="k">小穴</div><div class="v">' + esc(gl[0]) + '</div></div>';
+      if (gl.length > 1 || (genitals && typeof genitals === 'object' && (g(genitals, 'description') || g(genitals, 'desc')))) {
+        var gdesc = gl.length > 1 ? gl.slice(1).join('\n') : (g(genitals, 'description') || g(genitals, 'desc') || '');
+        if (gdesc) html += '<div class="body-desc"><div class="label">小穴描写</div>' + esc(gdesc) + '</div>';
+      }
+    }
+
+    // 肛门
+    var anus = g(body, 'anus', g(body, 'anal', g(sx, 'anus', null)));
+    var anusStr = formatBodyPart(anus, ['color', 'tightness', 'shape']);
+    if (anusStr) {
+      var al = anusStr.split('\n');
+      html += '<div class="kv"><div class="k">肛门</div><div class="v">' + esc(al[0]) + '</div></div>';
+      if (al.length > 1 || (anus && typeof anus === 'object' && (g(anus, 'description') || g(anus, 'desc')))) {
+        var adesc = al.length > 1 ? al.slice(1).join('\n') : (g(anus, 'description') || g(anus, 'desc') || '');
+        if (adesc) html += '<div class="body-desc"><div class="label">肛门描写</div>' + esc(adesc) + '</div>';
+      }
+    }
+
+    // 足部等其他
+    var feet = g(body, 'feet', null);
+    var feetStr = formatBodyPart(feet, ['type', 'arch', 'toes', 'scent']);
+    if (feetStr) {
+      html += '<div class="kv"><div class="k">足部</div><div class="v">' + esc(feetStr.split('\n')[0]) + '</div></div>';
+      if (feetStr.indexOf('\n') >= 0) {
+        html += '<div class="body-desc"><div class="label">足部描写</div>' + esc(feetStr.split('\n').slice(1).join('\n')) + '</div>';
+      }
+    }
+
+    return html === '<div class="section-title">身体特征</div>' ? '' : html;
+  }
+
   function renderHarem(sd) {
+    saveOpenFolds('panel-harem');
+
     var sexual = g(sd, 'sexual', {});
     var rels = g(sd, 'npc_relations', {});
     var list = [];
     entries(sexual).forEach(function (e) {
       if (withUserSexCount(e.val) >= 1) list.push(e);
     });
-    // also include npc_relations marked as intimate even if sexual sparse
     entries(rels).forEach(function (e) {
       var rel = String(g(e.val, 'relationship', ''));
       if (/恋人|女友|后宫|情人|包养|奴隶|宠物|禁脔|炮友|妻子|未婚妻/.test(rel)) {
@@ -597,17 +771,8 @@ html, body {
         if (firstReason) virginHtml += '<div class="dim" style="margin-top:4px">失贞缘由：' + esc(firstReason) + '</div>';
       }
 
-      var body = g(sx, 'body_specs', null) || g(sx, 'body_features', null) || g(sx, 'body', null) || {};
-      var breast = g(body, 'breast', g(sx, 'breast', ''));
-      if (breast && typeof breast === 'object') breast = [g(breast, 'cup', ''), g(breast, 'shape', ''), g(breast, 'nipple', '')].filter(Boolean).join(' / ');
-      var genitals = g(body, 'genitals', g(sx, 'genitals', ''));
-      if (genitals && typeof genitals === 'object') genitals = [g(genitals, 'type', ''), g(genitals, 'color', ''), g(genitals, 'hair', '')].filter(Boolean).join(' / ');
-      var waist = g(body, 'waist_hip', g(sx, 'waist', ''));
-      if (waist && typeof waist === 'object') waist = [g(waist, 'waist', ''), g(waist, 'hips', '')].filter(Boolean).join(' / ');
-      var face = g(body, 'face', g(sx, 'face', ''));
-      if (face && typeof face === 'object') face = [g(face, 'features', ''), g(face, 'makeup', '')].filter(Boolean).join(' / ');
-
-      html += '<details class="fold">';
+      var foldId = 'harem-' + e.key;
+      html += '<details class="fold" data-fold-id="' + esc(foldId) + '">';
       html += '<summary><span class="title">' + esc(name);
       if (age !== '' && age !== '—') html += ' <span class="meta">' + esc(age) + '岁</span>';
       html += ' <span class="tag pink">' + esc(rel) + '</span></span></summary>';
@@ -617,24 +782,24 @@ html, body {
       html += '<div class="kv"><div class="k">关系</div><div class="v">' + esc(rel) + '</div></div>';
       html += '<div class="kv"><div class="k">穿着</div><div class="v muted">' + esc(clothStr || '—') + '</div></div>';
       html += '<div class="kv"><div class="k">贞操</div><div class="v">' + virginHtml + '</div></div>';
-      if (face) html += '<div class="kv"><div class="k">面容</div><div class="v">' + esc(face) + '</div></div>';
-      if (breast) html += '<div class="kv"><div class="k">胸部</div><div class="v">' + esc(breast) + '</div></div>';
-      if (waist) html += '<div class="kv"><div class="k">腰臀</div><div class="v">' + esc(waist) + '</div></div>';
-      if (genitals) html += '<div class="kv"><div class="k">私处</div><div class="v">' + esc(typeof genitals === 'string' ? genitals : JSON.stringify(genitals)) + '</div></div>';
       var mood = g(npc, 'context.current_mood', '');
       if (mood) html += '<div class="kv"><div class="k">情绪</div><div class="v">' + esc(mood) + '</div></div>';
+      html += bodySpecsBlock(sx);
       html += sexStatsBlock(sx);
       html += '</div></details>';
     });
     $('panel-harem').innerHTML = html;
+    restoreOpenFolds('panel-harem');
+    bindFoldListeners('panel-harem');
   }
 
   function renderAcquaint(sd) {
+    saveOpenFolds('panel-acquaint');
+
     var rels = g(sd, 'npc_relations', {});
     var sexual = g(sd, 'sexual', {});
     var list = [];
     entries(rels).forEach(function (e) {
-      // exclude harem (sex with user >= 1) unless male
       var sx = g(sexual, e.key, null);
       var gender = g(e.val, 'gender', '') || g(sx, 'gender', '');
       var isFemaleHarem = sx && withUserSexCount(sx) >= 1 && gender !== '男';
@@ -676,20 +841,26 @@ html, body {
     var a = g(sd, 'assets', {});
     var cash = g(a, 'cash', 0);
     var bank = g(a, 'bank', 0);
-    var banks = g(a, 'banks', null); // multi-bank preferred
+    var banks = g(a, 'banks', null);
 
     var html = '<div class="card"><h3>流动资金</h3>';
     html += '<div class="kv"><div class="k">现金</div><div class="v money">' + money(cash) + '</div></div>';
-    if (banks && typeof banks === 'object' && Object.keys(banks).length) {
-      entries(banks).forEach(function (e) {
+
+    var bankList = entries(banks || {});
+    if (bankList.length) {
+      bankList.forEach(function (e) {
         var nm = g(e.val, 'name', e.key);
+        // 纠正明显错误的「私人银行」标签（若数据里仍是旧名则原样显示）
         var bal = g(e.val, 'balance', e.val);
         if (typeof bal === 'object') bal = g(e.val, 'balance', 0);
         html += '<div class="kv"><div class="k">' + esc(nm) + '</div><div class="v money">' + money(typeof bal === 'number' ? bal : Number(bal) || 0) + '</div></div>';
       });
-    } else {
+    } else if (typeof bank === 'number' && bank > 0) {
+      // 兼容旧字段：仅有 assets.bank 时，按「银行存款」展示，不写私人银行
       html += '<div class="kv"><div class="k">银行存款</div><div class="v money">' + money(bank) + '</div></div>';
-      html += '<div class="dim" style="font-size:11px">（可拆为多家银行写入 assets.banks）</div>';
+      html += '<div class="dim" style="font-size:11px">建议拆分为 assets.banks（如 中国银行 / 建设银行 / 工商银行）</div>';
+    } else {
+      html += '<div class="kv"><div class="k">银行存款</div><div class="v money">' + money(0) + '</div></div>';
     }
     html += '</div>';
 
@@ -731,6 +902,8 @@ html, body {
   }
 
   function renderWx(sd) {
+    saveOpenFolds('panel-wx');
+
     var wx = g(sd, 'wechat', {});
     var list = entries(wx);
     $('badgeWx').style.display = list.length ? 'inline-block' : 'none';
@@ -747,13 +920,13 @@ html, body {
       var name = g(contact, 'name', e.key);
       var msgs = g(contact, 'messages', []);
       if (!Array.isArray(msgs)) {
-        // object map
         msgs = entries(msgs).map(function (m) { return m.val; });
       }
       msgs = msgs.slice().sort(function (a, b) {
         return String(g(a, 'time', '')).localeCompare(String(g(b, 'time', '')));
       });
-      html += '<details class="fold">';
+      var foldId = 'wx-' + e.key;
+      html += '<details class="fold" data-fold-id="' + esc(foldId) + '">';
       html += '<summary><span class="title">' + esc(name) + ' <span class="meta">' + msgs.length + ' 条</span></span></summary>';
       html += '<div class="fold-body">';
       if (!msgs.length) html += '<div class="dim">无消息</div>';
@@ -767,9 +940,13 @@ html, body {
       html += '</div></details>';
     });
     $('panel-wx').innerHTML = html;
+    restoreOpenFolds('panel-wx');
+    bindFoldListeners('panel-wx');
   }
 
   function renderGeass(sd) {
+    saveOpenFolds('panel-geass');
+
     var geass = g(sd, 'geass', {});
     var list = entries(geass);
     $('badgeGeass').style.display = list.length ? 'inline-block' : 'none';
@@ -783,7 +960,8 @@ html, body {
     var html = '<div class="card"><strong>已使用言灵</strong> · <span class="accent">' + list.length + '</span> 种</div>';
     list.forEach(function (e) {
       var gss = e.val || {};
-      html += '<details class="fold">';
+      var foldId = 'geass-' + e.key;
+      html += '<details class="fold" data-fold-id="' + esc(foldId) + '">';
       html += '<summary><span class="title">' + esc(g(gss, 'name', e.key));
       html += ' <span class="tag">' + esc(g(gss, 'type', '')) + '</span>';
       html += ' <span class="meta">×' + esc(g(gss, 'total_uses', 1)) + '</span></span></summary>';
@@ -803,10 +981,25 @@ html, body {
       html += '</div></details>';
     });
     $('panel-geass').innerHTML = html;
+    restoreOpenFolds('panel-geass');
+    bindFoldListeners('panel-geass');
+  }
+
+  var lastDataHash = '';
+  function dataHash(sd) {
+    try {
+      return JSON.stringify(sd);
+    } catch (e) {
+      return String(Date.now());
+    }
   }
 
   function renderAll(sd) {
     if (!sd) return;
+    var h = dataHash(sd);
+    // 数据未变时跳过整页重绘，避免折叠被重置（仍允许首次）
+    if (h === lastDataHash && state) return;
+    lastDataHash = h;
     state = sd;
     renderTop(sd);
     renderRole(sd);
@@ -819,11 +1012,12 @@ html, body {
     postHeight();
   }
 
+  /** 固定高度：顶栏 + 标签 + 内容区 380px，切换 tab 不再抖动 */
+  var FIXED_HEIGHT = 470;
   function postHeight() {
     try {
-      var h = document.getElementById('app').scrollHeight;
       if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'realworld-statusbar-resize', height: h }, '*');
+        window.parent.postMessage({ type: 'realworld-statusbar-resize', height: FIXED_HEIGHT }, '*');
       }
     } catch (e) {}
   }
@@ -877,7 +1071,15 @@ html, body {
         current: '折叠桌前看空邮箱',
         environment: '暖气半热，窗缝漏风，邮箱空空'
       },
-      assets: { cash: 200, bank: 1200, banks: {}, companies: {}, estates: {}, vehicles: {} },
+      assets: {
+        cash: 200,
+        bank: 0,
+        banks: {
+          bank_001: { name: '建设银行', balance: 800 },
+          bank_002: { name: '中国银行', balance: 400 }
+        },
+        companies: {}, estates: {}, vehicles: {}
+      },
       geass: {}, npc_relations: {}, sexual: {}, reputation: {}, wechat: {},
       world: { known_regions: {}, location_library: {} },
       _meta: { uid_counters: {} }
