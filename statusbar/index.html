@@ -1100,27 +1100,8 @@ html, body {
 
     var html = '';
     list.forEach(function (e) {
-      var gender = g(e.val, 'gender', '') || g(g(sexual, e.key, {}), 'gender', '');
-      // 女性：完整折叠卡（含私密数据）；男性：简洁卡片
-      if (gender === '女' || (gender !== '男' && g(sexual, e.key, null))) {
-        html += npcDetailCard(e.key, sd, 'acq');
-      } else {
-        var n = e.val;
-        var name = g(n, 'name', e.key);
-        var age = g(n, 'age', '—');
-        var job = g(n, 'occupation', g(n, 'job', '—'));
-        var rel = g(n, 'relationship', '—');
-        html += '<div class="card">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center">';
-        html += '<strong>' + esc(name) + '</strong>';
-        html += '<span class="tag blue">' + esc(rel) + '</span></div>';
-        html += '<div class="kv" style="margin-top:6px"><div class="k">年龄</div><div class="v">' + esc(age) + '</div></div>';
-        html += '<div class="kv"><div class="k">职业</div><div class="v">' + esc(job) + '</div></div>';
-        html += affinityBlock(n, {});
-        var mood = g(n, 'context.current_mood', '');
-        if (mood) html += '<div class="kv"><div class="k">情绪</div><div class="v muted">' + esc(mood) + '</div></div>';
-        html += '</div>';
-      }
+      // 男女统一姓名折叠，避免列表过长；男性不展示私密 body_specs
+      html += npcDetailCard(e.key, sd, 'acq');
     });
     $('panel-acquaint').innerHTML = html;
     restoreOpenFolds('panel-acquaint');
