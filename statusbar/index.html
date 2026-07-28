@@ -294,21 +294,42 @@ html, body {
   flex-shrink: 0;
 }
 
-.body-desc {
-  margin-top: 4px;
-  padding: 6px 8px;
-  background: var(--panel);
-  border-radius: 6px;
+.body-block {
+  margin-top: 8px;
   border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--card);
+}
+.body-block > .bh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--card2);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent2);
+}
+.body-block > .bh .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-weight: 400;
+  margin-left: auto;
+  justify-content: flex-end;
+}
+.body-block > .bh .tags .tag {
+  font-size: 10px;
+}
+.body-block > .bd {
+  padding: 8px 10px;
   font-size: 12px;
   color: var(--muted);
-  line-height: 1.5;
+  line-height: 1.55;
 }
-.body-desc .label {
-  color: var(--accent2);
-  font-size: 11px;
-  margin-bottom: 2px;
-}
+.body-block > .bd:empty { display: none; }
 </style>
 </head>
 <body>
@@ -599,25 +620,51 @@ html, body {
     $('panel-map').innerHTML = html;
   }
 
-  /** 将对象字段拼成可读描述；优先 description 字段，其余键值并列 */
-  function formatBodyPart(obj, fallbackKeys) {
-    if (obj == null || obj === '') return '';
-    if (typeof obj === 'string' || typeof obj === 'number') return String(obj);
-    if (typeof obj !== 'object') return '';
-    var desc = g(obj, 'description', '') || g(obj, 'desc', '') || g(obj, 'detail', '');
-    var parts = [];
-    var keys = fallbackKeys || Object.keys(obj);
-    keys.forEach(function (k) {
+  /** 从 body 部位对象取出标签列表 + 描写正文 */
+  function parseBodyPart(obj, tagKeys) {
+    if (obj == null || obj === '') return null;
+    if (typeof obj === 'string' || typeof obj === 'number') {
+      return { tags: [], text: String(obj) };
+    }
+    if (typeof obj !== 'object') return null;
+    var tags = [];
+    (tagKeys || Object.keys(obj)).forEach(function (k) {
       if (k === 'description' || k === 'desc' || k === 'detail' || k === '$meta') return;
       var v = obj[k];
       if (v == null || v === '') return;
       if (typeof v === 'object') return;
-      parts.push(String(v));
+      tags.push(String(v));
     });
-    var typeLine = parts.join(' · ');
-    if (desc && typeLine) return typeLine + '\n' + desc;
-    if (desc) return desc;
-    return typeLine;
+    // 未在 tagKeys 里的其它短字段也收成 tag
+    Object.keys(obj).forEach(function (k) {
+      if (k === 'description' || k === 'desc' || k === 'detail' || k === '$meta') return;
+      if (tagKeys && tagKeys.indexOf(k) >= 0) return;
+      var v = obj[k];
+      if (v == null || v === '' || typeof v === 'object') return;
+      if (tags.indexOf(String(v)) < 0) tags.push(String(v));
+    });
+    var text = g(obj, 'description', '') || g(obj, 'desc', '') || g(obj, 'detail', '') || '';
+    if (!tags.length && !text) return null;
+    return { tags: tags, text: text };
+  }
+
+  function bodyPartCard(title, parsed) {
+    if (!parsed) return '';
+    var html = '<div class="body-block">';
+    html += '<div class="bh"><span>' + esc(title) + '</span>';
+    if (parsed.tags && parsed.tags.length) {
+      html += '<span class="tags">';
+      parsed.tags.forEach(function (t) {
+        html += '<span class="tag">' + esc(t) + '</span>';
+      });
+      html += '</span>';
+    }
+    html += '</div>';
+    if (parsed.text) {
+      html += '<div class="bd">' + esc(parsed.text) + '</div>';
+    }
+    html += '</div>';
+    return html;
   }
 
   function sexStatsBlock(sx) {
@@ -662,78 +709,57 @@ html, body {
 
   function bodySpecsBlock(sx) {
     var body = g(sx, 'body_specs', null) || g(sx, 'body_features', null) || g(sx, 'body', null) || {};
-    if (!body || typeof body !== 'object') return '';
-
-    var html = '<div class="section-title">身体特征</div>';
-
-    // 面容
-    var face = g(body, 'face', g(sx, 'face', null));
-    var faceStr = formatBodyPart(face, ['features', 'makeup', 'lips', 'expression']);
-    if (faceStr) {
-      html += '<div class="kv"><div class="k">面容</div><div class="v">' + esc(faceStr.split('\n')[0]) + '</div></div>';
-      if (faceStr.indexOf('\n') >= 0) {
-        html += '<div class="body-desc"><div class="label">面容描写</div>' + esc(faceStr.split('\n').slice(1).join('\n')) + '</div>';
-      }
-    }
+    if (!body || typeof body !== 'object') body = {};
 
     // 胸部
-    var breast = g(body, 'breast', g(sx, 'breast', null));
-    var breastStr = formatBodyPart(breast, ['cup', 'shape', 'nipple', 'areola', 'sensitivity']);
-    if (breastStr) {
-      var lines = breastStr.split('\n');
-      html += '<div class="kv"><div class="k">胸部</div><div class="v">' + esc(lines[0]) + '</div></div>';
-      if (lines.length > 1) {
-        html += '<div class="body-desc"><div class="label">胸部描写</div>' + esc(lines.slice(1).join('\n')) + '</div>';
-      } else if (breast && typeof breast === 'object' && (g(breast, 'description') || g(breast, 'desc'))) {
-        html += '<div class="body-desc"><div class="label">胸部描写</div>' + esc(g(breast, 'description') || g(breast, 'desc')) + '</div>';
-      }
-    }
-
-    // 腰臀
-    var waist = g(body, 'waist_hip', g(body, 'waist', g(sx, 'waist', null)));
-    var waistStr = formatBodyPart(waist, ['waist', 'hips', 'hips_shape', 'thighs']);
-    if (waistStr) {
-      html += '<div class="kv"><div class="k">腰臀</div><div class="v">' + esc(waistStr.split('\n')[0]) + '</div></div>';
-      if (waistStr.indexOf('\n') >= 0) {
-        html += '<div class="body-desc"><div class="label">腰臀描写</div>' + esc(waistStr.split('\n').slice(1).join('\n')) + '</div>';
-      }
-    }
-
-    // 小穴 / genitals
-    var genitals = g(body, 'genitals', g(sx, 'genitals', g(body, 'pussy', null)));
-    var genStr = formatBodyPart(genitals, ['type', 'color', 'hair', 'wetness', 'tightness', 'inner']);
-    if (genStr) {
-      var gl = genStr.split('\n');
-      html += '<div class="kv"><div class="k">小穴</div><div class="v">' + esc(gl[0]) + '</div></div>';
-      if (gl.length > 1 || (genitals && typeof genitals === 'object' && (g(genitals, 'description') || g(genitals, 'desc')))) {
-        var gdesc = gl.length > 1 ? gl.slice(1).join('\n') : (g(genitals, 'description') || g(genitals, 'desc') || '');
-        if (gdesc) html += '<div class="body-desc"><div class="label">小穴描写</div>' + esc(gdesc) + '</div>';
-      }
-    }
-
+    var breast = parseBodyPart(
+      g(body, 'breast', g(sx, 'breast', null)),
+      ['cup', 'shape', 'nipple', 'areola', 'sensitivity']
+    );
+    // 小穴
+    var genitals = parseBodyPart(
+      g(body, 'genitals', g(sx, 'genitals', g(body, 'pussy', null))),
+      ['type', 'color', 'hair', 'wetness', 'tightness', 'inner']
+    );
     // 肛门
-    var anus = g(body, 'anus', g(body, 'anal', g(sx, 'anus', null)));
-    var anusStr = formatBodyPart(anus, ['color', 'tightness', 'shape']);
-    if (anusStr) {
-      var al = anusStr.split('\n');
-      html += '<div class="kv"><div class="k">肛门</div><div class="v">' + esc(al[0]) + '</div></div>';
-      if (al.length > 1 || (anus && typeof anus === 'object' && (g(anus, 'description') || g(anus, 'desc')))) {
-        var adesc = al.length > 1 ? al.slice(1).join('\n') : (g(anus, 'description') || g(anus, 'desc') || '');
-        if (adesc) html += '<div class="body-desc"><div class="label">肛门描写</div>' + esc(adesc) + '</div>';
-      }
+    var anus = parseBodyPart(
+      g(body, 'anus', g(body, 'anal', g(sx, 'anus', null))),
+      ['color', 'tightness', 'shape']
+    );
+    // 臀腿足：合并 waist_hip / hips / legs / thighs / feet
+    var lower = g(body, 'hips_legs_feet', null)
+      || g(body, 'lower_body', null)
+      || null;
+    if (!lower) {
+      // 拼合旧字段
+      var wh = g(body, 'waist_hip', g(body, 'waist', g(sx, 'waist', null))) || {};
+      var ft = g(body, 'feet', g(sx, 'feet', null)) || {};
+      var legs = g(body, 'legs', g(body, 'thighs', null)) || {};
+      if (typeof wh !== 'object') wh = wh ? { description: String(wh) } : {};
+      if (typeof ft !== 'object') ft = ft ? { description: String(ft) } : {};
+      if (typeof legs !== 'object') legs = legs ? { description: String(legs) } : {};
+      var merged = {};
+      [wh, legs, ft].forEach(function (o) {
+        if (!o || typeof o !== 'object') return;
+        Object.keys(o).forEach(function (k) {
+          if (k === 'description' || k === 'desc' || k === 'detail') return;
+          if (o[k] != null && o[k] !== '' && merged[k] == null) merged[k] = o[k];
+        });
+      });
+      var descs = [g(wh, 'description') || g(wh, 'desc'), g(legs, 'description') || g(legs, 'desc'), g(ft, 'description') || g(ft, 'desc')].filter(Boolean);
+      if (descs.length) merged.description = descs.join('；');
+      lower = Object.keys(merged).length ? merged : null;
     }
+    var lowerParsed = parseBodyPart(lower, ['waist', 'hips', 'hips_shape', 'thighs', 'legs', 'type', 'arch', 'toes', 'scent']);
 
-    // 足部等其他
-    var feet = g(body, 'feet', null);
-    var feetStr = formatBodyPart(feet, ['type', 'arch', 'toes', 'scent']);
-    if (feetStr) {
-      html += '<div class="kv"><div class="k">足部</div><div class="v">' + esc(feetStr.split('\n')[0]) + '</div></div>';
-      if (feetStr.indexOf('\n') >= 0) {
-        html += '<div class="body-desc"><div class="label">足部描写</div>' + esc(feetStr.split('\n').slice(1).join('\n')) + '</div>';
-      }
-    }
+    var parts = '';
+    parts += bodyPartCard('胸部', breast);
+    parts += bodyPartCard('小穴', genitals);
+    parts += bodyPartCard('肛门', anus);
+    parts += bodyPartCard('臀腿足', lowerParsed);
 
-    return html === '<div class="section-title">身体特征</div>' ? '' : html;
+    if (!parts) return '';
+    return '<div class="section-title">身体特征</div>' + parts;
   }
 
   function npcDetailCard(npcKey, sd, foldPrefix) {
