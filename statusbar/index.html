@@ -433,6 +433,28 @@ html, body {
     return 0;
   }
 
+  /** 恋爱/包养等亲密关系关键词（无性交也可进后宫） */
+  var HAREM_REL_RE = /恋人|女友|男朋友|后宫|情人|包养|被包养|金主|奴隶|宠物|禁脔|炮友|妻子|未婚妻|老婆|订婚|同居|暧昧对象|男女朋友/;
+
+  function isIntimateRel(rel) {
+    return HAREM_REL_RE.test(String(rel || ''));
+  }
+
+  /** 是否收入后宫：女性 +（与主角有过性 或 亲密恋爱/包养等关系） */
+  function isHaremMember(npcKey, sd) {
+    var rels = g(sd, 'npc_relations', {});
+    var sexual = g(sd, 'sexual', {});
+    var npc = g(rels, npcKey, {}) || {};
+    var sx = g(sexual, npcKey, null) || {};
+    var gender = g(npc, 'gender', '') || g(sx, 'gender', '');
+    if (gender === '男') return false;
+    // 无 gender 时：有 sexual 条目或关系词命中则按女性处理
+    var rel = g(npc, 'relationship', '') || g(sx, 'relationship', '');
+    if (withUserSexCount(sx) >= 1) return true;
+    if (isIntimateRel(rel)) return true;
+    return false;
+  }
+
   function saveOpenFolds(panelId) {
     var panel = $(panelId);
     if (!panel) return;
@@ -526,11 +548,10 @@ html, body {
 
     html += '<div class="card">';
     html += '<h3>当前身份</h3>';
-    html += '<div class="kv"><div class="k">状态</div><div class="v">' + esc(identity) + '</div></div>';
+    html += '<div class="kv"><div class="k">状态</div><div class="v accent">' + esc(identity) + '</div></div>';
     if (classLabel) html += '<div class="kv"><div class="k">阶级</div><div class="v">' + esc(classLabel) + '</div></div>';
     html += '<div class="kv"><div class="k">财力</div><div class="v"><span class="tag green">' + esc(wealthHint) + '</span></div></div>';
     html += '<div class="kv"><div class="k">声望</div><div class="v">' + esc(repParts.length ? repParts.join(' · ') : '尚无记录') + '</div></div>';
-    html += '<div class="kv"><div class="k">背景</div><div class="v muted">' + esc(g(u, 'background.education', '')) + '</div></div>';
     html += '</div>';
 
     html += '<div class="card">';
@@ -715,78 +736,99 @@ html, body {
     return html === '<div class="section-title">身体特征</div>' ? '' : html;
   }
 
+  function npcDetailCard(npcKey, sd, foldPrefix) {
+    var rels = g(sd, 'npc_relations', {});
+    var sexual = g(sd, 'sexual', {});
+    var npc = g(rels, npcKey, {}) || {};
+    var sx = g(sexual, npcKey, null) || {};
+    var name = g(sx, 'name', '') || g(npc, 'name', npcKey);
+    var age = g(sx, 'age', '') || g(npc, 'age', '');
+    var birth = g(sx, 'birth_date', '') || g(npc, 'birth_date', '');
+    if (!age && birth) age = calcAge(birth, g(sd, 'time.current_date', ''));
+    var job = g(sx, 'occupation', '') || g(npc, 'occupation', '') || g(npc, 'job', '—');
+    var rel = g(npc, 'relationship', g(sx, 'relationship', '—'));
+    var gender = g(npc, 'gender', '') || g(sx, 'gender', '');
+    var clothing = g(sx, 'clothing', null);
+    var clothStr = '';
+    if (clothing && typeof clothing === 'object') {
+      clothStr = [g(clothing, 'top', ''), g(clothing, 'bottom', ''), g(clothing, 'underwear.bra', ''), g(clothing, 'underwear.panties', '')].filter(Boolean).join(' / ');
+    } else {
+      clothStr = g(sx, 'clothing_desc', '') || g(npc, 'clothing_desc', '');
+    }
+
+    var virgin = g(sx, 'virgin', null);
+    var firstPartner = g(sx, 'first_partner', '');
+    var firstReason = g(sx, 'first_sex_reason', '') || g(sx, 'lost_virginity_to', '');
+    var virginHtml = '';
+    if (virgin === true) {
+      virginHtml = '<span class="tag green">处女</span>';
+    } else if (virgin === false) {
+      virginHtml = '<span class="tag pink">非处</span>';
+      if (firstPartner) virginHtml += ' <span class="muted">初夜：' + esc(firstPartner) + '</span>';
+      if (firstReason) virginHtml += '<div class="dim" style="margin-top:4px">失贞缘由：' + esc(firstReason) + '</div>';
+    }
+
+    var foldId = foldPrefix + '-' + npcKey;
+    var tagClass = foldPrefix === 'harem' ? 'pink' : 'blue';
+    var html = '';
+    html += '<details class="fold" data-fold-id="' + esc(foldId) + '">';
+    html += '<summary><span class="title">' + esc(name);
+    if (age !== '' && age !== '—') html += ' <span class="meta">' + esc(age) + '岁</span>';
+    if (gender) html += ' <span class="tag">' + esc(gender) + '</span>';
+    html += ' <span class="tag ' + tagClass + '">' + esc(rel) + '</span></span></summary>';
+    html += '<div class="fold-body">';
+    html += '<div class="kv"><div class="k">职业</div><div class="v">' + esc(job) + '</div></div>';
+    if (birth) html += '<div class="kv"><div class="k">生日</div><div class="v">' + esc(birth) + '</div></div>';
+    html += '<div class="kv"><div class="k">关系</div><div class="v">' + esc(rel) + '</div></div>';
+    var imp = g(npc, 'impression', null);
+    if (imp != null) html += '<div class="kv"><div class="k">印象</div><div class="v">' + esc(imp) + '</div></div>';
+    if (clothStr) html += '<div class="kv"><div class="k">穿着</div><div class="v muted">' + esc(clothStr) + '</div></div>';
+    if (virginHtml) html += '<div class="kv"><div class="k">贞操</div><div class="v">' + virginHtml + '</div></div>';
+    var mood = g(npc, 'context.current_mood', '');
+    if (mood) html += '<div class="kv"><div class="k">情绪</div><div class="v">' + esc(mood) + '</div></div>';
+    // 女性或有 sexual 数据时展示私密
+    if (gender !== '男' && (sx && Object.keys(sx).length)) {
+      html += bodySpecsBlock(sx);
+      if (withUserSexCount(sx) >= 1 || g(sx, 'body_count_times', 0) > 0 || g(sx, 'lifetime', null)) {
+        html += sexStatsBlock(sx);
+      }
+    }
+    html += '</div></details>';
+    return html;
+  }
+
+  function collectHaremKeys(sd) {
+    var sexual = g(sd, 'sexual', {});
+    var rels = g(sd, 'npc_relations', {});
+    var keys = {};
+    entries(sexual).forEach(function (e) {
+      if (isHaremMember(e.key, sd)) keys[e.key] = true;
+    });
+    entries(rels).forEach(function (e) {
+      if (isHaremMember(e.key, sd)) keys[e.key] = true;
+    });
+    return Object.keys(keys);
+  }
+
   function renderHarem(sd) {
     saveOpenFolds('panel-harem');
 
     var sexual = g(sd, 'sexual', {});
     var rels = g(sd, 'npc_relations', {});
-    var list = [];
-    entries(sexual).forEach(function (e) {
-      if (withUserSexCount(e.val) >= 1) list.push(e);
-    });
-    entries(rels).forEach(function (e) {
-      var rel = String(g(e.val, 'relationship', ''));
-      if (/恋人|女友|后宫|情人|包养|奴隶|宠物|禁脔|炮友|妻子|未婚妻/.test(rel)) {
-        if (!list.some(function (x) { return x.key === e.key; })) {
-          list.push({ key: e.key, val: g(sexual, e.key, {}) });
-        }
-      }
-    });
+    var list = collectHaremKeys(sd);
 
     $('badgeHarem').style.display = list.length ? 'inline-block' : 'none';
     $('badgeHarem').textContent = list.length;
 
     if (!list.length) {
-      $('panel-harem').innerHTML = '<div class="empty"><div class="ico">♡</div>暂无后宫成员<br><span class="dim">与主角发生性关系后将出现在此</span></div>';
+      $('panel-harem').innerHTML = '<div class="empty"><div class="ico">♡</div>暂无后宫成员<br><span class="dim">恋人 / 情人 / 包养等关系，或与主角发生性关系后收入</span></div>';
       return;
     }
 
     var html = '';
-    list.forEach(function (e) {
-      var sx = e.val || {};
-      var npc = g(rels, e.key, {}) || {};
-      var name = g(sx, 'name', '') || g(npc, 'name', e.key);
-      var age = g(sx, 'age', '') || g(npc, 'age', '');
-      var birth = g(sx, 'birth_date', '') || g(npc, 'birth_date', '');
-      if (!age && birth) age = calcAge(birth, g(sd, 'time.current_date', ''));
-      var job = g(sx, 'occupation', '') || g(npc, 'occupation', '') || g(npc, 'job', '—');
-      var rel = g(npc, 'relationship', g(sx, 'relationship', '—'));
-      var clothing = g(sx, 'clothing', null);
-      var clothStr = '';
-      if (clothing && typeof clothing === 'object') {
-        clothStr = [g(clothing, 'top', ''), g(clothing, 'bottom', ''), g(clothing, 'underwear.bra', ''), g(clothing, 'underwear.panties', '')].filter(Boolean).join(' / ');
-      } else {
-        clothStr = g(sx, 'clothing_desc', '—');
-      }
-
-      var virgin = g(sx, 'virgin', null);
-      var firstPartner = g(sx, 'first_partner', '');
-      var firstReason = g(sx, 'first_sex_reason', '') || g(sx, 'lost_virginity_to', '');
-      var virginHtml = '';
-      if (virgin === true) {
-        virginHtml = '<span class="tag green">处女</span>';
-      } else if (virgin === false) {
-        virginHtml = '<span class="tag pink">非处</span>';
-        if (firstPartner) virginHtml += ' <span class="muted">初夜：' + esc(firstPartner) + '</span>';
-        if (firstReason) virginHtml += '<div class="dim" style="margin-top:4px">失贞缘由：' + esc(firstReason) + '</div>';
-      }
-
-      var foldId = 'harem-' + e.key;
-      html += '<details class="fold" data-fold-id="' + esc(foldId) + '">';
-      html += '<summary><span class="title">' + esc(name);
-      if (age !== '' && age !== '—') html += ' <span class="meta">' + esc(age) + '岁</span>';
-      html += ' <span class="tag pink">' + esc(rel) + '</span></span></summary>';
-      html += '<div class="fold-body">';
-      html += '<div class="kv"><div class="k">职业</div><div class="v">' + esc(job) + '</div></div>';
-      if (birth) html += '<div class="kv"><div class="k">生日</div><div class="v">' + esc(birth) + '</div></div>';
-      html += '<div class="kv"><div class="k">关系</div><div class="v">' + esc(rel) + '</div></div>';
-      html += '<div class="kv"><div class="k">穿着</div><div class="v muted">' + esc(clothStr || '—') + '</div></div>';
-      html += '<div class="kv"><div class="k">贞操</div><div class="v">' + virginHtml + '</div></div>';
-      var mood = g(npc, 'context.current_mood', '');
-      if (mood) html += '<div class="kv"><div class="k">情绪</div><div class="v">' + esc(mood) + '</div></div>';
-      html += bodySpecsBlock(sx);
-      html += sexStatsBlock(sx);
-      html += '</div></details>';
+    list.forEach(function (key) {
+      // 保证有 sexual 壳也可展示；数据从 rels + sexual 合并读
+      html += npcDetailCard(key, sd, 'harem');
     });
     $('panel-harem').innerHTML = html;
     restoreOpenFolds('panel-harem');
@@ -800,10 +842,7 @@ html, body {
     var sexual = g(sd, 'sexual', {});
     var list = [];
     entries(rels).forEach(function (e) {
-      var sx = g(sexual, e.key, null);
-      var gender = g(e.val, 'gender', '') || g(sx, 'gender', '');
-      var isFemaleHarem = sx && withUserSexCount(sx) >= 1 && gender !== '男';
-      if (isFemaleHarem) return;
+      if (isHaremMember(e.key, sd)) return; // 后宫不进熟人
       list.push(e);
     });
 
@@ -817,24 +856,32 @@ html, body {
 
     var html = '';
     list.forEach(function (e) {
-      var n = e.val;
-      var name = g(n, 'name', e.key);
-      var age = g(n, 'age', '—');
-      var job = g(n, 'occupation', g(n, 'job', '—'));
-      var rel = g(n, 'relationship', '—');
-      var imp = g(n, 'impression', null);
-      html += '<div class="card">';
-      html += '<div style="display:flex;justify-content:space-between;align-items:center">';
-      html += '<strong>' + esc(name) + '</strong>';
-      html += '<span class="tag blue">' + esc(rel) + '</span></div>';
-      html += '<div class="kv" style="margin-top:6px"><div class="k">年龄</div><div class="v">' + esc(age) + '</div></div>';
-      html += '<div class="kv"><div class="k">职业</div><div class="v">' + esc(job) + '</div></div>';
-      if (imp != null) html += '<div class="kv"><div class="k">印象</div><div class="v">' + esc(imp) + '</div></div>';
-      var mood = g(n, 'context.current_mood', '');
-      if (mood) html += '<div class="kv"><div class="k">情绪</div><div class="v muted">' + esc(mood) + '</div></div>';
-      html += '</div>';
+      var gender = g(e.val, 'gender', '') || g(g(sexual, e.key, {}), 'gender', '');
+      // 女性：完整折叠卡（含私密数据）；男性：简洁卡片
+      if (gender === '女' || (gender !== '男' && g(sexual, e.key, null))) {
+        html += npcDetailCard(e.key, sd, 'acq');
+      } else {
+        var n = e.val;
+        var name = g(n, 'name', e.key);
+        var age = g(n, 'age', '—');
+        var job = g(n, 'occupation', g(n, 'job', '—'));
+        var rel = g(n, 'relationship', '—');
+        var imp = g(n, 'impression', null);
+        html += '<div class="card">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+        html += '<strong>' + esc(name) + '</strong>';
+        html += '<span class="tag blue">' + esc(rel) + '</span></div>';
+        html += '<div class="kv" style="margin-top:6px"><div class="k">年龄</div><div class="v">' + esc(age) + '</div></div>';
+        html += '<div class="kv"><div class="k">职业</div><div class="v">' + esc(job) + '</div></div>';
+        if (imp != null) html += '<div class="kv"><div class="k">印象</div><div class="v">' + esc(imp) + '</div></div>';
+        var mood = g(n, 'context.current_mood', '');
+        if (mood) html += '<div class="kv"><div class="k">情绪</div><div class="v muted">' + esc(mood) + '</div></div>';
+        html += '</div>';
+      }
     });
     $('panel-acquaint').innerHTML = html;
+    restoreOpenFolds('panel-acquaint');
+    bindFoldListeners('panel-acquaint');
   }
 
   function renderAssets(sd) {
