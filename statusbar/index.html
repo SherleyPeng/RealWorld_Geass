@@ -29,8 +29,8 @@ html, body {
   background: transparent;
   color: var(--text);
   font-family: var(--font);
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 15px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 #app {
@@ -39,8 +39,8 @@ html, body {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0,0,0,.45);
-  height: 470px;
-  max-height: 470px;
+  height: 520px;
+  max-height: 520px;
   display: flex;
   flex-direction: column;
 }
@@ -49,13 +49,13 @@ html, body {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: linear-gradient(90deg, #1a1520 0%, #141820 50%, #121820 100%);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 .topbar .brand {
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: .12em;
   color: var(--accent);
   font-weight: 600;
@@ -65,8 +65,8 @@ html, body {
   display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end;
 }
 .chip {
-  font-size: 11px;
-  padding: 2px 8px;
+  font-size: 13px;
+  padding: 3px 10px;
   border-radius: 999px;
   background: var(--card2);
   border: 1px solid var(--border);
@@ -88,10 +88,10 @@ html, body {
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
   flex: 1 0 auto;
-  min-width: 52px;
-  padding: 9px 10px;
+  min-width: 56px;
+  padding: 10px 12px;
   text-align: center;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   cursor: pointer;
   border: none;
@@ -109,19 +109,19 @@ html, body {
 .tab .badge {
   position: absolute;
   top: 4px; right: 4px;
-  min-width: 14px; height: 14px;
-  padding: 0 4px;
+  min-width: 16px; height: 16px;
+  padding: 0 5px;
   border-radius: 999px;
   background: var(--accent);
   color: #111;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
-  line-height: 14px;
+  line-height: 16px;
 }
 
 .panel {
   display: none;
-  padding: 12px;
+  padding: 14px;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -130,39 +130,39 @@ html, body {
   box-sizing: border-box;
 }
 .panel.active { display: block; }
-.panel::-webkit-scrollbar { width: 5px; }
+.panel::-webkit-scrollbar { width: 6px; }
 .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
 .section-title {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--dim);
   letter-spacing: .08em;
-  margin: 10px 0 6px;
+  margin: 12px 0 8px;
   text-transform: uppercase;
 }
 .section-title:first-child { margin-top: 0; }
 
 .kv {
   display: grid;
-  grid-template-columns: 72px 1fr;
-  gap: 4px 10px;
-  margin-bottom: 6px;
+  grid-template-columns: 78px 1fr;
+  gap: 5px 12px;
+  margin-bottom: 7px;
 }
-.kv .k { color: var(--dim); font-size: 12px; }
-.kv .v { color: var(--text); word-break: break-word; }
+.kv .k { color: var(--dim); font-size: 14px; }
+.kv .v { color: var(--text); word-break: break-word; font-size: 14px; }
 
 .card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
 }
 .card h3 {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--accent2);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .muted { color: var(--muted); }
 .dim { color: var(--dim); }
@@ -196,44 +196,45 @@ html, body {
 .fold > summary::after {
   content: "▸";
   color: var(--dim);
-  font-size: 11px;
+  font-size: 13px;
   transition: transform .15s;
 }
 .fold[open] > summary::after { transform: rotate(90deg); }
 .fold > summary .title {
   font-weight: 600;
+  font-size: 15px;
   color: var(--text);
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
-.fold > summary .meta { color: var(--muted); font-size: 11px; }
-.fold-body { padding: 10px 12px 12px; border-top: 1px solid var(--border); }
+.fold > summary .meta { color: var(--muted); font-size: 13px; }
+.fold-body { padding: 12px 14px 14px; border-top: 1px solid var(--border); }
 
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 10px;
 }
 .stat-cell {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 6px 8px;
+  padding: 8px 10px;
   text-align: center;
 }
 .stat-cell .n {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--accent2);
   font-variant-numeric: tabular-nums;
 }
 .stat-cell .n.pink { color: var(--pink); }
-.stat-cell .l { font-size: 10px; color: var(--dim); margin-top: 2px; }
+.stat-cell .l { font-size: 12px; color: var(--dim); margin-top: 3px; }
 
 .tag {
   display: inline-block;
-  font-size: 10px;
-  padding: 1px 6px;
+  font-size: 12px;
+  padding: 2px 7px;
   border-radius: 4px;
   background: rgba(201,162,39,.15);
   color: var(--accent2);
@@ -256,22 +257,22 @@ html, body {
 }
 
 .msg {
-  padding: 6px 0;
+  padding: 7px 0;
   border-bottom: 1px dashed var(--border);
-  font-size: 12px;
+  font-size: 14px;
 }
 .msg:last-child { border-bottom: none; }
-.msg .when { color: var(--dim); font-size: 10px; margin-bottom: 2px; }
+.msg .when { color: var(--dim); font-size: 12px; margin-bottom: 2px; }
 .msg.out .body { color: var(--blue); }
 .msg.in .body { color: var(--text); }
 
 .empty {
   text-align: center;
-  padding: 28px 12px;
+  padding: 32px 14px;
   color: var(--dim);
-  font-size: 12px;
+  font-size: 14px;
 }
-.empty .ico { font-size: 22px; margin-bottom: 6px; opacity: .5; }
+.empty .ico { font-size: 24px; margin-bottom: 8px; opacity: .5; }
 
 .money { color: var(--green); font-weight: 600; font-variant-numeric: tabular-nums; }
 .row-list { list-style: none; }
@@ -285,9 +286,9 @@ html, body {
 .row-list li:last-child { border-bottom: none; }
 
 .demo-banner {
-  font-size: 10px;
+  font-size: 12px;
   text-align: center;
-  padding: 3px;
+  padding: 4px;
   background: rgba(232,106,106,.15);
   color: var(--red);
   border-bottom: 1px solid var(--border);
@@ -295,7 +296,7 @@ html, body {
 }
 
 .body-block {
-  margin-top: 8px;
+  margin-top: 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
@@ -304,11 +305,12 @@ html, body {
 .body-block > .bh {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
-  padding: 7px 10px;
+  padding: 8px 12px;
   background: var(--card2);
   border-bottom: 1px solid var(--border);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--accent2);
 }
@@ -321,15 +323,99 @@ html, body {
   justify-content: flex-end;
 }
 .body-block > .bh .tags .tag {
-  font-size: 10px;
+  font-size: 12px;
+}
+.body-block > .bh .dev {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 2px;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--dim);
+}
+.body-block > .bh .dev .bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  overflow: hidden;
+  min-width: 60px;
+}
+.body-block > .bh .dev .bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--pink), var(--accent2));
+}
+.body-block > .bh .dev .pct {
+  font-variant-numeric: tabular-nums;
+  color: var(--pink);
+  min-width: 36px;
+  text-align: right;
 }
 .body-block > .bd {
-  padding: 8px 10px;
-  font-size: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
   color: var(--muted);
   line-height: 1.55;
 }
 .body-block > .bd:empty { display: none; }
+
+.aff-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.aff-item {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.aff-item .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+.aff-item .row .lab { color: var(--muted); }
+.aff-item .row .val {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.aff-item .bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  overflow: hidden;
+}
+.aff-item .bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+.aff-item.love .val { color: var(--pink); }
+.aff-item.love .bar > i { background: var(--pink); }
+.aff-item.hate .val { color: var(--red); }
+.aff-item.hate .bar > i { background: var(--red); }
+.aff-item.sub .val { color: var(--accent2); }
+.aff-item.sub .bar > i { background: var(--accent2); }
+.aff-item.friend .val { color: var(--blue); }
+.aff-item.friend .bar > i { background: var(--blue); }
+
+.cloth-grid {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 4px 10px;
+  margin-top: 2px;
+  font-size: 14px;
+}
+.cloth-grid .ck { color: var(--dim); }
+.cloth-grid .cv { color: var(--muted); word-break: break-word; }
 </style>
 </head>
 <body>
@@ -620,32 +706,36 @@ html, body {
     $('panel-map').innerHTML = html;
   }
 
-  /** 从 body 部位对象取出标签列表 + 描写正文 */
+  /** 从 body 部位对象取出标签列表 + 描写正文 + 开发度 */
   function parseBodyPart(obj, tagKeys) {
     if (obj == null || obj === '') return null;
     if (typeof obj === 'string' || typeof obj === 'number') {
-      return { tags: [], text: String(obj) };
+      return { tags: [], text: String(obj), development: 0 };
     }
     if (typeof obj !== 'object') return null;
+    var skip = { description:1, desc:1, detail:1, $meta:1, development:1, dev:1, 开发度:1 };
     var tags = [];
     (tagKeys || Object.keys(obj)).forEach(function (k) {
-      if (k === 'description' || k === 'desc' || k === 'detail' || k === '$meta') return;
+      if (skip[k]) return;
       var v = obj[k];
       if (v == null || v === '') return;
       if (typeof v === 'object') return;
       tags.push(String(v));
     });
-    // 未在 tagKeys 里的其它短字段也收成 tag
     Object.keys(obj).forEach(function (k) {
-      if (k === 'description' || k === 'desc' || k === 'detail' || k === '$meta') return;
+      if (skip[k]) return;
       if (tagKeys && tagKeys.indexOf(k) >= 0) return;
       var v = obj[k];
       if (v == null || v === '' || typeof v === 'object') return;
       if (tags.indexOf(String(v)) < 0) tags.push(String(v));
     });
     var text = g(obj, 'description', '') || g(obj, 'desc', '') || g(obj, 'detail', '') || '';
-    if (!tags.length && !text) return null;
-    return { tags: tags, text: text };
+    var dev = g(obj, 'development', null);
+    if (dev == null) dev = g(obj, 'dev', null);
+    if (dev == null) dev = g(obj, '开发度', 0);
+    dev = Math.max(0, Math.min(100, Number(dev) || 0));
+    if (!tags.length && !text && !dev) return null;
+    return { tags: tags, text: text, development: dev };
   }
 
   function bodyPartCard(title, parsed) {
@@ -659,10 +749,94 @@ html, body {
       });
       html += '</span>';
     }
+    var pct = typeof parsed.development === 'number' ? parsed.development : 0;
+    html += '<div class="dev"><span>开发</span><span class="bar"><i style="width:' + pct + '%"></i></span><span class="pct">' + pct + '%</span></div>';
     html += '</div>';
     if (parsed.text) {
       html += '<div class="bd">' + esc(parsed.text) + '</div>';
     }
+    html += '</div>';
+    return html;
+  }
+
+  function clamp100(n) {
+    n = Number(n);
+    if (isNaN(n)) return 0;
+    return Math.max(0, Math.min(100, Math.round(n)));
+  }
+
+  function affinityBlock(npc, sx) {
+    var aff = g(npc, 'affinity', null) || g(sx, 'affinity', null) || {};
+    var love = clamp100(g(aff, 'love', g(aff, '恋爱', g(npc, 'love', 0))));
+    var hate = clamp100(g(aff, 'hatred', g(aff, 'hate', g(aff, '憎恨', 0))));
+    var sub = clamp100(g(aff, 'submission', g(aff, '臣服', 0)));
+    var friend = clamp100(g(aff, 'friendship', g(aff, '友情', 0)));
+    // 兼容旧 impression：若四维全 0 且有 impression>0，映射到友情作为弱提示（不显示 impression 本身）
+    var imp = g(npc, 'impression', null);
+    if (love === 0 && hate === 0 && sub === 0 && friend === 0 && typeof imp === 'number' && imp !== 0) {
+      if (imp > 0) friend = clamp100(imp);
+      else hate = clamp100(-imp);
+    }
+    var html = '<div class="section-title">关系数值</div><div class="aff-grid">';
+    html += '<div class="aff-item love"><div class="row"><span class="lab">恋爱</span><span class="val">' + love + '</span></div><div class="bar"><i style="width:' + love + '%"></i></div></div>';
+    html += '<div class="aff-item hate"><div class="row"><span class="lab">憎恨</span><span class="val">' + hate + '</span></div><div class="bar"><i style="width:' + hate + '%"></i></div></div>';
+    html += '<div class="aff-item sub"><div class="row"><span class="lab">臣服</span><span class="val">' + sub + '</span></div><div class="bar"><i style="width:' + sub + '%"></i></div></div>';
+    html += '<div class="aff-item friend"><div class="row"><span class="lab">友情</span><span class="val">' + friend + '</span></div><div class="bar"><i style="width:' + friend + '%"></i></div></div>';
+    html += '</div>';
+    return html;
+  }
+
+  function measurementsBlock(sx, npc) {
+    var m = g(sx, 'measurements', null) || g(npc, 'measurements', null) || g(sx, 'body_measurements', null) || {};
+    var bust = g(m, 'bust', g(m, '胸围', g(sx, 'bust', '')));
+    var waist = g(m, 'waist', g(m, '腰围', g(sx, 'waist_cm', '')));
+    var hips = g(m, 'hips', g(m, '臀围', g(sx, 'hips', '')));
+    // 兼容 "88-58-90" 字符串
+    var raw = g(m, 'bwh', g(sx, 'bwh', ''));
+    if ((!bust || !waist || !hips) && raw && typeof raw === 'string') {
+      var parts = raw.split(/[-/–—]/;
+      if (parts.length >= 3) {
+        if (!bust) bust = parts[0].trim();
+        if (!waist) waist = parts[1].trim();
+        if (!hips) hips = parts[2].trim();
+      }
+    }
+    if (bust === '' && waist === '' && hips === '') return '';
+    var html = '<div class="kv"><div class="k">三围</div><div class="v mono">';
+    html += esc(bust !== '' ? bust : '—') + ' / ' + esc(waist !== '' ? waist : '—') + ' / ' + esc(hips !== '' ? hips : '—');
+    html += ' <span class="dim">cm</span></div></div>';
+    return html;
+  }
+
+  function clothingBlock(sx, npc) {
+    var clothing = g(sx, 'clothing', null) || g(npc, 'clothing', null);
+    if (!clothing || typeof clothing !== 'object') {
+      var legacy = g(sx, 'clothing_desc', '') || g(npc, 'clothing_desc', '');
+      if (!legacy) return '';
+      return '<div class="kv"><div class="k">穿着</div><div class="v muted">' + esc(legacy) + '</div></div>';
+    }
+    var top = g(clothing, 'top', g(clothing, '上衣', ''));
+    var bottom = g(clothing, 'bottom', g(clothing, '下衣', ''));
+    var uw = g(clothing, 'underwear', null);
+    var underwear = '';
+    if (uw && typeof uw === 'object') {
+      underwear = [g(uw, 'bra', ''), g(uw, 'panties', ''), g(uw, 'desc', '')].filter(Boolean).join(' · ');
+    } else {
+      underwear = g(clothing, 'underwear', g(clothing, '内衣', '')) || '';
+      if (typeof underwear === 'object') underwear = '';
+    }
+    var shoes = g(clothing, 'shoes_socks', g(clothing, 'shoes', g(clothing, '鞋袜', '')));
+    var acc = g(clothing, 'accessories', g(clothing, '配饰', ''));
+    if (typeof shoes === 'object') shoes = [g(shoes, 'shoes', ''), g(shoes, 'socks', '')].filter(Boolean).join(' · ');
+    if (typeof acc === 'object') acc = Object.keys(acc).map(function (k) { return acc[k]; }).filter(Boolean).join(' · ');
+
+    if (!top && !bottom && !underwear && !shoes && !acc) return '';
+    var html = '<div class="section-title">穿着</div><div class="cloth-grid">';
+    if (top) html += '<div class="ck">上衣</div><div class="cv">' + esc(top) + '</div>';
+    if (bottom) html += '<div class="ck">下衣</div><div class="cv">' + esc(bottom) + '</div>';
+    if (underwear) html += '<div class="ck">内衣</div><div class="cv">' + esc(underwear) + '</div>';
+    if (shoes) html += '<div class="ck">鞋袜</div><div class="cv">' + esc(shoes) + '</div>';
+    if (acc) html += '<div class="ck">配饰</div><div class="cv">' + esc(acc) + '</div>';
     html += '</div>';
     return html;
   }
@@ -774,13 +948,6 @@ html, body {
     var job = g(sx, 'occupation', '') || g(npc, 'occupation', '') || g(npc, 'job', '—');
     var rel = g(npc, 'relationship', g(sx, 'relationship', '—'));
     var gender = g(npc, 'gender', '') || g(sx, 'gender', '');
-    var clothing = g(sx, 'clothing', null);
-    var clothStr = '';
-    if (clothing && typeof clothing === 'object') {
-      clothStr = [g(clothing, 'top', ''), g(clothing, 'bottom', ''), g(clothing, 'underwear.bra', ''), g(clothing, 'underwear.panties', '')].filter(Boolean).join(' / ');
-    } else {
-      clothStr = g(sx, 'clothing_desc', '') || g(npc, 'clothing_desc', '');
-    }
 
     var virgin = g(sx, 'virgin', null);
     var firstPartner = g(sx, 'first_partner', '');
@@ -806,14 +973,13 @@ html, body {
     html += '<div class="kv"><div class="k">职业</div><div class="v">' + esc(job) + '</div></div>';
     if (birth) html += '<div class="kv"><div class="k">生日</div><div class="v">' + esc(birth) + '</div></div>';
     html += '<div class="kv"><div class="k">关系</div><div class="v">' + esc(rel) + '</div></div>';
-    var imp = g(npc, 'impression', null);
-    if (imp != null) html += '<div class="kv"><div class="k">印象</div><div class="v">' + esc(imp) + '</div></div>';
-    if (clothStr) html += '<div class="kv"><div class="k">穿着</div><div class="v muted">' + esc(clothStr) + '</div></div>';
+    html += measurementsBlock(sx, npc);
     if (virginHtml) html += '<div class="kv"><div class="k">贞操</div><div class="v">' + virginHtml + '</div></div>';
     var mood = g(npc, 'context.current_mood', '');
     if (mood) html += '<div class="kv"><div class="k">情绪</div><div class="v">' + esc(mood) + '</div></div>';
-    // 女性或有 sexual 数据时展示私密
-    if (gender !== '男' && (sx && Object.keys(sx).length)) {
+    html += affinityBlock(npc, sx);
+    html += clothingBlock(sx, npc);
+    if (gender !== '男') {
       html += bodySpecsBlock(sx);
       if (withUserSexCount(sx) >= 1 || g(sx, 'body_count_times', 0) > 0 || g(sx, 'lifetime', null)) {
         html += sexStatsBlock(sx);
@@ -892,14 +1058,13 @@ html, body {
         var age = g(n, 'age', '—');
         var job = g(n, 'occupation', g(n, 'job', '—'));
         var rel = g(n, 'relationship', '—');
-        var imp = g(n, 'impression', null);
         html += '<div class="card">';
         html += '<div style="display:flex;justify-content:space-between;align-items:center">';
         html += '<strong>' + esc(name) + '</strong>';
         html += '<span class="tag blue">' + esc(rel) + '</span></div>';
         html += '<div class="kv" style="margin-top:6px"><div class="k">年龄</div><div class="v">' + esc(age) + '</div></div>';
         html += '<div class="kv"><div class="k">职业</div><div class="v">' + esc(job) + '</div></div>';
-        if (imp != null) html += '<div class="kv"><div class="k">印象</div><div class="v">' + esc(imp) + '</div></div>';
+        html += affinityBlock(n, {});
         var mood = g(n, 'context.current_mood', '');
         if (mood) html += '<div class="kv"><div class="k">情绪</div><div class="v muted">' + esc(mood) + '</div></div>';
         html += '</div>';
@@ -1085,8 +1250,8 @@ html, body {
     postHeight();
   }
 
-  /** 固定高度：顶栏 + 标签 + 内容区 380px，切换 tab 不再抖动 */
-  var FIXED_HEIGHT = 470;
+  /** 固定高度：字号加大后整体抬高，切换 tab 不再抖动 */
+  var FIXED_HEIGHT = 520;
   function postHeight() {
     try {
       if (window.parent && window.parent !== window) {
