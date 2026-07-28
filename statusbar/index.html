@@ -794,7 +794,7 @@ html, body {
     // 兼容 "88-58-90" 字符串
     var raw = g(m, 'bwh', g(sx, 'bwh', ''));
     if ((!bust || !waist || !hips) && raw && typeof raw === 'string') {
-      var parts = raw.split(/[-/–—]/;
+      var parts = String(raw).split(/[\-\/\u2013\u2014]/);
       if (parts.length >= 3) {
         if (!bust) bust = parts[0].trim();
         if (!waist) waist = parts[1].trim();
