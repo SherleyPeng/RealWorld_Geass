@@ -362,6 +362,35 @@ html, body {
   line-height: 1.55;
 }
 .body-block > .bd:empty { display: none; }
+.body-block > .btype {
+  padding: 8px 12px 0;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 8px;
+  margin: 0 0 0;
+}
+.body-block > .btype .bt-label {
+  display: block;
+  font-size: 12px;
+  color: var(--accent2);
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+.body-block > .bstate {
+  padding: 8px 12px 10px;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.body-block > .bstate .bs-label {
+  display: block;
+  font-size: 12px;
+  color: var(--dim);
+  margin-bottom: 3px;
+  font-weight: 600;
+}
 
 .aff-grid {
   display: grid;
@@ -710,10 +739,16 @@ html, body {
   function parseBodyPart(obj, tagKeys) {
     if (obj == null || obj === '') return null;
     if (typeof obj === 'string' || typeof obj === 'number') {
-      return { tags: [], text: String(obj), development: 0 };
+      return { tags: [], typeDesc: '', state: String(obj), development: 0 };
     }
     if (typeof obj !== 'object') return null;
-    var skip = { description:1, desc:1, detail:1, $meta:1, development:1, dev:1, 开发度:1 };
+    // 名器图鉴长文 / 类型说明字段，不进标签
+    var skip = {
+      description:1, desc:1, detail:1, $meta:1,
+      development:1, dev:1, 开发度:1,
+      type_desc:1, type_description:1, catalog_desc:1, catalog:1,
+      名器描述:1, 类型描述:1, 图鉴:1, lore:1, entry:1
+    };
     var tags = [];
     (tagKeys || Object.keys(obj)).forEach(function (k) {
       if (skip[k]) return;
@@ -729,13 +764,24 @@ html, body {
       if (v == null || v === '' || typeof v === 'object') return;
       if (tags.indexOf(String(v)) < 0) tags.push(String(v));
     });
-    var text = g(obj, 'description', '') || g(obj, 'desc', '') || g(obj, 'detail', '') || '';
+    // 名器类型详述（引用「名器生成1.0」对应条目文本）
+    var typeDesc = g(obj, 'type_desc', '')
+      || g(obj, 'type_description', '')
+      || g(obj, 'catalog_desc', '')
+      || g(obj, 'catalog', '')
+      || g(obj, '名器描述', '')
+      || g(obj, '类型描述', '')
+      || g(obj, '图鉴', '')
+      || g(obj, 'lore', '')
+      || '';
+    // 当前个体状态描写
+    var state = g(obj, 'description', '') || g(obj, 'desc', '') || g(obj, 'detail', '') || '';
     var dev = g(obj, 'development', null);
     if (dev == null) dev = g(obj, 'dev', null);
     if (dev == null) dev = g(obj, '开发度', 0);
     dev = Math.max(0, Math.min(100, Number(dev) || 0));
-    if (!tags.length && !text && !dev) return null;
-    return { tags: tags, text: text, development: dev };
+    if (!tags.length && !typeDesc && !state && !dev) return null;
+    return { tags: tags, typeDesc: typeDesc, state: state, development: dev };
   }
 
   function bodyPartCard(title, parsed) {
@@ -752,8 +798,14 @@ html, body {
     var pct = typeof parsed.development === 'number' ? parsed.development : 0;
     html += '<div class="dev"><span>开发</span><span class="bar"><i style="width:' + pct + '%"></i></span><span class="pct">' + pct + '%</span></div>';
     html += '</div>';
-    if (parsed.text) {
-      html += '<div class="bd">' + esc(parsed.text) + '</div>';
+    // 1) 类型标签已在标题行；2) 名器图鉴详述；3) 当前状态
+    if (parsed.typeDesc) {
+      html += '<div class="btype"><span class="bt-label">名器详述</span>' + esc(parsed.typeDesc) + '</div>';
+    }
+    if (parsed.state) {
+      html += '<div class="bstate"><span class="bs-label">当前状态</span>' + esc(parsed.state) + '</div>';
+    } else if (parsed.text) {
+      html += '<div class="bstate"><span class="bs-label">当前状态</span>' + esc(parsed.text) + '</div>';
     }
     html += '</div>';
     return html;
