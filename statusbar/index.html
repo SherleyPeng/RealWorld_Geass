@@ -764,7 +764,7 @@ html, body {
       if (v == null || v === '' || typeof v === 'object') return;
       if (tags.indexOf(String(v)) < 0) tags.push(String(v));
     });
-    // 名器类型详述（引用「名器生成1.0」对应条目文本）
+    // 名器类型详述（引用「名器生成1.1」对应条目文本）
     var typeDesc = g(obj, 'type_desc', '')
       || g(obj, 'type_description', '')
       || g(obj, 'catalog_desc', '')
@@ -988,6 +988,34 @@ html, body {
     return '<div class="section-title">身体特征</div>' + parts;
   }
 
+
+  function personalityBlock(npc, sx) {
+    var p = g(npc, 'personality', null) || g(sx, 'personality', null);
+    if (!p || typeof p !== 'object') return '';
+    var arch = g(p, 'archetype', '');
+    var core = g(p, 'core', '');
+    var speech = g(p, 'speech_style', '');
+    var baseline = g(p, 'emotion_baseline', '');
+    var soft = g(p, 'soft_spots', '');
+    var hard = g(p, 'hard_limits', '');
+    var anchors = g(p, 'behavioral_anchors', []);
+    if (!Array.isArray(anchors)) anchors = [];
+    if (!arch && !core && !speech) return '';
+    var html = '<div class="section-title">性格锚定</div>';
+    html += '<div class="card" style="margin-bottom:8px">';
+    if (arch) html += '<div class="kv"><div class="k">类型</div><div class="v"><span class="tag">' + esc(arch) + '</span></div></div>';
+    if (core) html += '<div class="kv"><div class="k">核心</div><div class="v">' + esc(core) + '</div></div>';
+    if (speech) html += '<div class="kv"><div class="k">话风</div><div class="v muted">' + esc(speech) + '</div></div>';
+    if (baseline) html += '<div class="kv"><div class="k">底色</div><div class="v">' + esc(baseline) + '</div></div>';
+    if (soft) html += '<div class="kv"><div class="k">软肋</div><div class="v pink">' + esc(soft) + '</div></div>';
+    if (hard) html += '<div class="kv"><div class="k">硬界</div><div class="v orange">' + esc(hard) + '</div></div>';
+    if (anchors.length) {
+      html += '<div class="kv"><div class="k">行为锚</div><div class="v dim">' + esc(anchors.map(function(a){return '· '+a;}).join(' ')) + '</div></div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
   function npcDetailCard(npcKey, sd, foldPrefix) {
     var rels = g(sd, 'npc_relations', {});
     var sexual = g(sd, 'sexual', {});
@@ -1030,6 +1058,7 @@ html, body {
     var mood = g(npc, 'context.current_mood', '');
     if (mood) html += '<div class="kv"><div class="k">情绪</div><div class="v">' + esc(mood) + '</div></div>';
     html += affinityBlock(npc, sx);
+    html += personalityBlock(npc, sx);
     html += clothingBlock(sx, npc);
     if (gender !== '男') {
       html += bodySpecsBlock(sx);
